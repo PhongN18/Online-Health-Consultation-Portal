@@ -1,0 +1,6 @@
+@BackendOHCP_HostAddress = http://localhost:5054
+
+GET {{BackendOHCP_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
