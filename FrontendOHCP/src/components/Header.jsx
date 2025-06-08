@@ -1,17 +1,42 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 function Header() {
+
+    const [isScrolled, setIsScrolled] = useState(false);
+
+    useEffect(() => {
+        // Function to handle scroll event
+        const handleScroll = () => {
+        // Check the vertical scroll position (y-axis)
+            if (window.scrollY > 800) {
+                setIsScrolled(true);  // Change state when passed 200px
+            } else {
+                setIsScrolled(false);
+            }
+        };
+
+        // Attach event listener to the window scroll
+        window.addEventListener('scroll', handleScroll);
+
+        // Cleanup event listener on component unmount
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [window.scrollY]);
+
+
     return (
-        <header className="bg-white opacity-90 text-[var(--dark-blue)] px-10 py-4 flex gap-20 sticky top-0 z-10">
-            <h1 className="text-3xl font-bold">OHCP</h1>
+        <header className={`${!isScrolled ? 'bg-white text-[var(--dark-blue)]' : 'bg-[var(--dark-blue)] text-white'} px-10 flex gap-20 sticky top-0 z-10`}>
+            <h2 className="text-5xl font-bold py-4"><Link to='/'>OHCP</Link></h2>
             <div className='flex items-center flex-grow justify-between'>
-                <nav className='flex items-center font-bold'>
-                    <Link className="mr-6" to="/">Home</Link>
-                    <Link className="mr-6" to="/doctors">Doctors</Link>
-                    <Link className="" to="/appointment">Book Appointment</Link>
+                <nav className='flex items-center font-bold h-full'>
+                    <Link className={`${isScrolled ? 'hover:bg-white hover:text-[var(--dark-blue)]' : 'hover:bg-[var(--dark-blue)] hover:text-white'} h-full flex justify-center items-center px-4 transition-all duration-200 ease-in-out`} to="/">Home</Link>
+                    <Link className={`${isScrolled ? 'hover:bg-white hover:text-[var(--dark-blue)]' : 'hover:bg-[var(--dark-blue)] hover:text-white'} h-full flex justify-center items-center px-4 transition-all duration-200 ease-in-out`} to="/doctors">Doctors</Link>
+                    <Link className={`${isScrolled ? 'hover:bg-white hover:text-[var(--dark-blue)]' : 'hover:bg-[var(--dark-blue)] hover:text-white'} h-full flex justify-center items-center px-4 transition-all duration-200 ease-in-out`} to="/appointment">Book Appointment</Link>
                 </nav>
                 <div>
-                    <button className='bg-white font-bold text-black mr-4'>Log in</button>
+                    <Link to='/member/login' className={`${!isScrolled ? 'bg-white text-[var(--dark-blue)] hover:bg-[var(--dark-blue)] hover:text-white' : 'bg-[var(--dark-blue)] text-white hover:bg-white hover:text-[var(--dark-blue)]'} font-bold px-6 py-3 rounded-4xl transition-all duration-200 ease-in-out mr-4`}>Log in</Link>
                     <button className='bg-[var(--primary-blue)] text-white font-bold px-6 py-3 rounded-4xl'>Book a video appointment</button>
                 </div>
             </div>
