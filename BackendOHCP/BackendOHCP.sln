@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackendOHCP", "BackendOHCP.csproj", "{994C4086-78D6-2159-5FC3-83697CEEEFFC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{994C4086-78D6-2159-5FC3-83697CEEEFFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{994C4086-78D6-2159-5FC3-83697CEEEFFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{994C4086-78D6-2159-5FC3-83697CEEEFFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{994C4086-78D6-2159-5FC3-83697CEEEFFC}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7672B5C2-B9EB-4505-AA3F-B7EFDA0FC25D}
+	EndGlobalSection
+EndGlobal
