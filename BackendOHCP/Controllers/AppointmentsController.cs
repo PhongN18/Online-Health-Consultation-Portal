@@ -18,20 +18,33 @@ namespace BackendOHCP.Controllers
         }
 
         // 1. Patient đặt lịch hẹn mới
-        [Authorize(Roles = "patient,admin")]
+        // POST: api/Appointments
+        [Authorize(Roles = "patient,doctor,admin")]
         [HttpPost]
-        public IActionResult CreateAppointment([FromBody] Appointment newAppointment)
+        public IActionResult CreateAppointment([FromBody] AppointmentRequest request)
         {
-            // Kiểm tra slot đã bị book chưa (cùng doctor, cùng appointmentTime)
+            // Kiểm tra nếu doctor và patient hợp lệ
+            if (request.PatientId == 0 || request.DoctorId == 0)
+                return BadRequest(new { message = "Patient and Doctor must be specified." });
+
+            // Kiểm tra nếu thời gian đã được đặt
             var conflict = _context.Appointments.Any(a =>
-                a.DoctorId == newAppointment.DoctorId &&
-                a.AppointmentTime == newAppointment.AppointmentTime);
+                a.DoctorId == request.DoctorId && 
+                a.AppointmentTime == request.AppointmentTime);
 
             if (conflict)
                 return BadRequest(new { message = "Time slot not available." });
 
-            newAppointment.Status = "scheduled";
-            newAppointment.CreatedAt = DateTime.UtcNow;
+            // Tạo lịch hẹn mới
+            var newAppointment = new Appointment
+            {
+                PatientId = request.PatientId,
+                DoctorId = request.DoctorId,
+                AppointmentTime = request.AppointmentTime,
+                Mode = request.Mode,
+                Status = "scheduled", // Chế độ mặc định là scheduled
+                CreatedAt = DateTime.UtcNow
+            };
 
             _context.Appointments.Add(newAppointment);
             _context.SaveChanges();
@@ -69,6 +82,7 @@ namespace BackendOHCP.Controllers
         }
 
         // 3. Bệnh nhân/doctor reschedule (đổi lịch)
+        // PUT: api/Appointments/{id}
         [Authorize(Roles = "patient,doctor,admin")]
         [HttpPut("{id}")]
         public IActionResult RescheduleAppointment(int id, [FromBody] DateTime newTime)
@@ -77,22 +91,31 @@ namespace BackendOHCP.Controllers
             if (appointment == null)
                 return NotFound(new { message = "Appointment not found." });
 
+            // Kiểm tra nếu doctorId và patientId hợp lệ
+            if (appointment.DoctorId == 0 || appointment.PatientId == 0)
+            {
+                return BadRequest(new { message = "DoctorId and PatientId are required." });
+            }
+
             // Kiểm tra slot trống cho doctor
             var conflict = _context.Appointments.Any(a =>
                 a.DoctorId == appointment.DoctorId &&
                 a.AppointmentTime == newTime &&
-                a.AppointmentId != id);
+                a.AppointmentId != id); // Tránh check lại chính nó
 
             if (conflict)
                 return BadRequest(new { message = "Time slot not available." });
 
+            // Cập nhật thời gian của lịch hẹn
             appointment.AppointmentTime = newTime;
             _context.SaveChanges();
 
             return Ok(appointment);
         }
 
+
         // 4. Bệnh nhân/doctor/admin hủy lịch
+        // DELETE: api/Appointments/{id}
         [Authorize(Roles = "patient,doctor,admin")]
         [HttpDelete("{id}")]
         public IActionResult CancelAppointment(int id)
@@ -107,7 +130,9 @@ namespace BackendOHCP.Controllers
             return Ok(new { message = "Appointment canceled." });
         }
 
+
         // 5. (Nâng cao) Xem các slot trống của doctor theo ngày
+        // GET: api/Appointments/doctor/{doctorId}/available-slots
         [Authorize(Roles = "patient,doctor,admin")]
         [HttpGet("doctor/{doctorId}/available-slots")]
         public IActionResult GetAvailableSlots(int doctorId, [FromQuery] DateTime date)
@@ -128,5 +153,6 @@ namespace BackendOHCP.Controllers
 
             return Ok(availableSlots);
         }
+
     }
 }
