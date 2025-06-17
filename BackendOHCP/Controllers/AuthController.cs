@@ -30,7 +30,7 @@ namespace BackendOHCP.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest req)
         {
-            // Kiểm tra nếu email đã tồn tại trong hệ thống
+            // Check if email already exists
             if (await _context.Users.AnyAsync(u => u.Email == req.Email))
                 return BadRequest(new { message = "Email already exists." });
 
@@ -39,17 +39,50 @@ namespace BackendOHCP.Controllers
                 Email = req.Email,
                 PasswordHash = _hasher.HashPassword(null, req.Password),
                 Role = req.Role.ToLower(),
-                FirstName = req.FirstName,
-                LastName = req.LastName,
                 CreatedAt = DateTime.UtcNow
             };
 
-            // Thêm user vào DB
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Register success!" });
+            // ✅ Create JWT token
+            var claims = new[]
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+                new Claim("userId", user.UserId.ToString()),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(12),
+                signingCredentials: creds
+            );
+
+            // ✅ Return user + token
+            return Ok(new
+            {
+                token = new JwtSecurityTokenHandler().WriteToken(token),
+                expires = token.ValidTo,
+                user = new
+                {
+                    user.UserId,
+                    user.Email,
+                    user.Role,
+                    user.FirstName,
+                    user.LastName,
+                    user.Gender,
+                    user.DateOfBirth,
+                    user.CreatedAt
+                }
+            });
         }
+
 
         // POST: api/auth/login
         [HttpPost("login")]
