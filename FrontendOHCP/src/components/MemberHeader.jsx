@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 
-function Header() {
+function MemberHeader() {
     return (
         <header className={`bg-white text-[#6c747c] px-10 py-4 flex justify-center`}>
             <div className="w-[1000px] flex justify-between">
@@ -20,4 +20,4 @@ function Header() {
     );
 }
 
-export default Header;
+export default MemberHeader;

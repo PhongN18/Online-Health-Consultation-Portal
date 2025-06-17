@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import ChildrenHealth from '../assets/Home/ChildrenHealth.svg';
 import doctor1 from '../assets/Home/doctor1.png';
 import ManageCondition from '../assets/Home/ManageCondition.svg';
@@ -80,7 +81,7 @@ function Home() {
                             <p className='font-bold text-sm text-[var(--dark-blue)] mt-2'>Online Prescriptions</p>
                         </div>
                     </div>
-                    <button className='bg-[var(--primary-blue)] text-white font-bold px-6 py-3 rounded-4xl mb-12'>Book a video appointment</button>
+                    <Link to='/member/register' className='bg-[var(--primary-blue)] text-white font-bold px-6 py-3 rounded-4xl mb-12 inline-block hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer'>Book a video appointment</Link>
                 </div>
             </div>
 

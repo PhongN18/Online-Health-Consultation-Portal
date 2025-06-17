@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import DoctorCard from '../components/DoctorCard';
+import DoctorCard from '../../components/DoctorCard';
 
 function DoctorList() {
     const doctors = [

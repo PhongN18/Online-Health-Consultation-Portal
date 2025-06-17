@@ -33,11 +33,10 @@ function Header() {
                 <nav className='flex items-center font-bold h-full'>
                     <Link className={`${isScrolled ? 'hover:bg-white hover:text-[var(--dark-blue)]' : 'hover:bg-[var(--dark-blue)] hover:text-white'} h-full flex justify-center items-center px-4 transition-all duration-200 ease-in-out`} to="/">Home</Link>
                     <Link className={`${isScrolled ? 'hover:bg-white hover:text-[var(--dark-blue)]' : 'hover:bg-[var(--dark-blue)] hover:text-white'} h-full flex justify-center items-center px-4 transition-all duration-200 ease-in-out`} to="/doctors">Doctors</Link>
-                    <Link className={`${isScrolled ? 'hover:bg-white hover:text-[var(--dark-blue)]' : 'hover:bg-[var(--dark-blue)] hover:text-white'} h-full flex justify-center items-center px-4 transition-all duration-200 ease-in-out`} to="/appointment">Book Appointment</Link>
                 </nav>
                 <div>
                     <Link to='/member/login' className={`${!isScrolled ? 'bg-white text-[var(--dark-blue)] hover:bg-[var(--dark-blue)] hover:text-white' : 'bg-[var(--dark-blue)] text-white hover:bg-white hover:text-[var(--dark-blue)]'} font-bold px-6 py-3 rounded-4xl transition-all duration-200 ease-in-out mr-4`}>Log in</Link>
-                    <button className='bg-[var(--primary-blue)] text-white font-bold px-6 py-3 rounded-4xl'>Book a video appointment</button>
+                    <Link to='/member/register' className='bg-[var(--primary-blue)] text-white font-bold px-6 py-3 rounded-4xl inline-block hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer'>Book a video appointment</Link>
                 </div>
             </div>
         </header>

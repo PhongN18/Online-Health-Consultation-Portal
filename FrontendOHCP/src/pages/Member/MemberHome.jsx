@@ -1,21 +1,27 @@
-import ChildrenHealth from '../assets/MemberHome/ChildrenHealth.jpg';
-import CustomerService from '../assets/MemberHome/CustomerService.jpg';
-import ManageCondition from '../assets/MemberHome/ManageCondition.jpg';
-import ManHealth from '../assets/MemberHome/MenHealth.jpg';
-import MentalHealth from '../assets/MemberHome/MentalHealth.jpg';
-import PrimaryCare from '../assets/MemberHome/PrimaryCare.jpg';
-import QnA from '../assets/MemberHome/QnA.jpg';
-import SeniorHealth from '../assets/MemberHome/SeniorHealth.jpg';
-import SexualHealth from '../assets/MemberHome/SexualHealth.jpg';
-import Text from '../assets/MemberHome/Text.jpg';
-import Travel from '../assets/MemberHome/Travel.jpg';
-import UrgentCare from '../assets/MemberHome/UrgentCare.jpg';
-import Wellness from '../assets/MemberHome/Wellness.jpg';
-import WomanHealth from '../assets/MemberHome/WomanHealth.jpg';
+import { useNavigate } from 'react-router-dom';
+import ChildrenHealth from '../../assets/MemberHome/ChildrenHealth.jpg';
+import CustomerService from '../../assets/MemberHome/CustomerService.jpg';
+import ManageCondition from '../../assets/MemberHome/ManageCondition.jpg';
+import ManHealth from '../../assets/MemberHome/MenHealth.jpg';
+import MentalHealth from '../../assets/MemberHome/MentalHealth.jpg';
+import PrimaryCare from '../../assets/MemberHome/PrimaryCare.jpg';
+import QnA from '../../assets/MemberHome/QnA.jpg';
+import SeniorHealth from '../../assets/MemberHome/SeniorHealth.jpg';
+import SexualHealth from '../../assets/MemberHome/SexualHealth.jpg';
+import Text from '../../assets/MemberHome/Text.jpg';
+import Travel from '../../assets/MemberHome/Travel.jpg';
+import UrgentCare from '../../assets/MemberHome/UrgentCare.jpg';
+import Wellness from '../../assets/MemberHome/Wellness.jpg';
+import WomanHealth from '../../assets/MemberHome/WomanHealth.jpg';
 
 
 function MemberHome() {
+
+    const navigate = useNavigate();
     
+    const handleClickOption = (option) => {
+        navigate(`/member/choose-doctor?option=${option}`)
+    }
 
     return (
         <div className="min-h-screen flex flex-col bg-[#f8f9fa] items-center">
@@ -24,7 +30,7 @@ function MemberHome() {
                     <h3 className="text-[#343a40] text-xl font-semibold">Talk to a doctor</h3>
                     <p className="text-[#6c747c] mb-4">Get medical advice, prescriptions, tests, and referrals.</p>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
+                        <div onClick={() => handleClickOption('primary')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
                             <div className="flex justify-between gap-6">
                                 <div className="rounded overflow-hidden h-20 w-20 flex-shrink-0">
                                     <img src={PrimaryCare} alt="" className="h-full w-full" />

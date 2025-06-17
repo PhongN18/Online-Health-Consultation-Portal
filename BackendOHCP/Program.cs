@@ -77,6 +77,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Add CORS service with specific policies
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // Your frontend URL
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials(); // Allow cookies or credentials if necessary
+    });
+});
+
 var app = builder.Build();
 
 // 3. Cấu hình middleware
@@ -95,6 +107,8 @@ else
     app.UseExceptionHandler("/error");
     app.UseHsts();
 }
+
+app.UseCors("AllowSpecificOrigin");
 
 app.UseAuthentication();
 app.UseAuthorization();

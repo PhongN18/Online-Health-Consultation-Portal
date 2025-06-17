@@ -1,27 +1,72 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import bg1 from '../assets/Auth/bg1.jpg';
-import bg2 from '../assets/Auth/bg2.jpg';
-import bg3 from '../assets/Auth/bg3.jpg';
-import bg4 from '../assets/Auth/bg4.jpg';
-import bg5 from '../assets/Auth/bg5.jpg';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import bg1 from '../../assets/Auth/bg1.jpg';
+import bg2 from '../../assets/Auth/bg2.jpg';
+import bg3 from '../../assets/Auth/bg3.jpg';
+import bg4 from '../../assets/Auth/bg4.jpg';
+import bg5 from '../../assets/Auth/bg5.jpg';
+import axiosInstance from '../../utils/axios';
 
 function CompleteProfile() {
 
+    const location = useLocation();
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [gender, setGender] = useState('');
+    const [dobDay, setDobDay] = useState('');
+    const [dobMonth, setDobMonth] = useState('');
+    const [dobYear, setDobYear] = useState('');
+
+
     const [bgImage, setBgImage] = useState(null);
     const navigate = useNavigate();
+
+    console.log(location)
     
-        useEffect(() => {
-            const images = [bg1, bg2, bg3, bg4, bg5];
-            const randomIndex = Math.floor(Math.random() * images.length);
-            setBgImage(images[randomIndex]);
-        }, []);
+    useEffect(() => {
+        const images = [bg1, bg2, bg3, bg4, bg5];
+        const randomIndex = Math.floor(Math.random() * images.length);
+        setBgImage(images[randomIndex]);
+    }, []);
 
-        const handleRegister = () => {
-            // Check if email is used or not
-
-            navigate('/complete-profile')
+    useEffect(() => {
+        if (!location.state || !location.state.userId) {
+            // If there's no userId, redirect to home or login page
+            navigate('/');
         }
+    }, [location.state, navigate]);
+
+    const handleCompleteProfile = async (e) => {
+        e.preventDefault();
+
+        const dobString = `${dobDay.padStart(2, '0')}/${dobMonth.padStart(2, '0')}/${dobYear}`;
+        const isoDob = `${dobYear}-${dobMonth.padStart(2, '0')}-${dobDay.padStart(2, '0')}`;
+
+        // Optional: validate the constructed date
+        const isValidDate = !isNaN(Date.parse(isoDob));
+        if (!isValidDate) {
+            alert("Invalid date of birth format.");
+            return;
+        }
+
+        try {
+            const response = await axiosInstance.put(`/api/Users/${location.state.userId}`, {
+                firstName,
+                lastName,
+                gender,
+                dateOfBirth: isoDob,
+            });
+
+            if (response.status === 200) {
+                console.log(response)
+                // Successfully updated, navigate to next step or dashboard
+                navigate('/member/home'); // Redirect to the dashboard
+            }
+        } catch (error) {
+            console.error('Profile update failed:', error);
+            alert('Profile update failed. Please try again.');
+        }
+    };
 
     return (
         <div className="min-h-screen relative">
@@ -42,6 +87,7 @@ function CompleteProfile() {
                                         id="firstName"
                                         className="bg-[#f1f3f5] w-full mt-2 px-4 py-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]"
                                         required
+                                        onChange={(e) => setFirstName(e.target.value)}
                                     />
                                 </div>
 
@@ -52,6 +98,7 @@ function CompleteProfile() {
                                         id="lastName"
                                         className="bg-[#f1f3f5] w-full mt-2 px-4 py-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]"
                                         required
+                                        onChange={(e) => setLastName(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -64,6 +111,8 @@ function CompleteProfile() {
                                         placeholder="DD"
                                         className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]"
                                         required
+                                        onChange={(e) => setDobDay(e.target.value)}
+
                                     />
                                     /
                                     <input
@@ -72,6 +121,7 @@ function CompleteProfile() {
                                         placeholder="MM"
                                         className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]"
                                         required
+                                        onChange={(e) => setDobMonth(e.target.value)}
                                     />
                                     /
                                     <input
@@ -80,6 +130,7 @@ function CompleteProfile() {
                                         placeholder="YYYY"
                                         className="bg-[#f1f3f5] w-16 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]"
                                         required
+                                        onChange={(e) => setDobYear(e.target.value)}
                                     />
                                 </div>
                             </div>
@@ -88,27 +139,27 @@ function CompleteProfile() {
                                 <label className="text-[#6f777f]">Biological gender</label>
                                 <div className="">
                                     <div className="grid grid-cols-2 mt-2 gap-4" role="radiogroup">
-                                        <div
-                                            role="radio"
-                                            aria-checked="false"
-                                            className="text-center font-bold text-[#6f777f] px-6 py-2 rounded-lg cursor-pointer border-1 border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)] focus:bg-[var(--primary-blue)] focus:text-white"
-                                            tabIndex="0"
-                                        >
-                                            Female
-                                        </div>
-                                        <div
-                                            role="radio"
-                                            aria-checked="false"
-                                            className="text-center font-bold text-[#6f777f] px-6 py-2 rounded-lg cursor-pointer border-1 border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)] focus:bg-[var(--primary-blue)] focus:text-white"
-                                            tabIndex="0"
-                                        >
-                                            Male
-                                        </div>
+                                        {['Female', 'Male'].map((g) => (
+                                            <div
+                                                key={g}
+                                                role="radio"
+                                                aria-checked={gender === g.toLowerCase()}
+                                                onClick={() => setGender(g.toLowerCase())}
+                                                className={`text-center font-bold px-6 py-2 rounded-lg cursor-pointer border-1
+                                                    ${gender === g.toLowerCase()
+                                                        ? 'bg-[var(--primary-blue)] text-white border-[var(--primary-blue)]'
+                                                        : 'text-[#6f777f] border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)]'}
+                                                `}
+                                                tabIndex="0"
+                                            >
+                                                {g}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
                             <div className='mt-4'>
-                                <button onClick={handleRegister} className='font-bold text-white bg-[var(--primary-blue)] w-full py-3 rounded-4xl cursor-pointer hover:bg-[var(--dark-blue)]'>
+                                <button onClick={handleCompleteProfile} className='font-bold text-white bg-[var(--primary-blue)] w-full py-3 rounded-4xl cursor-pointer hover:bg-[var(--dark-blue)]'>
                                     Continue
                                 </button>
                             </div>

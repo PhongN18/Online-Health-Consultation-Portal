@@ -3,28 +3,39 @@ import './App.css';
 import Footer from './components/Footer';
 import Header from './components/Header';
 import MemberHeader from './components/MemberHeader';
-import Appointment from './pages/Appointment';
-import CompleteProfile from './pages/CompleteProfile';
-import DoctorList from './pages/DoctorList';
-import DoctorProfile from './pages/DoctorProfile';
 import Home from './pages/Home';
-import Login from './pages/Login';
-import MemberHome from './pages/MemberHome';
-import Profile from './pages/Profile';
-import Register from './pages/Register';
+import Appointment from './pages/Member/Appointment';
+import ChooseDoctor from './pages/Member/ChooseDoctor';
+import CompleteProfile from './pages/Member/CompleteProfile';
+import DoctorList from './pages/Member/DoctorList';
+import DoctorProfile from './pages/Member/DoctorProfile';
+import Login from './pages/Member/Login';
+import MemberHome from './pages/Member/MemberHome';
+import Profile from './pages/Member/Profile';
+import Register from './pages/Member/Register';
+import ScheduleAppointment from './pages/Member/ScheduleAppointment';
+import PrivateRoute from './routes/PrivateRoute';
 
 function App() {
 
   const location = useLocation();
+  const token = localStorage.getItem('token');
 
-  // List of routes where we DO NOT want header/footer
   const authPaths = ['/member/login', '/member/register', '/member/getting-started'];
   const homePaths = ['/']
-  const memberPaths = ['/member/profile', '/member/home']
+  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment']
 
   const authLayout = authPaths.includes(location.pathname);
   const homeLayout = homePaths.includes(location.pathname);
   const memberLayout = memberPaths.includes(location.pathname);
+
+  if (token && location.pathname === '/') {
+    return <Navigate to="/member/home" replace />;
+  }
+
+  if (!token && location.pathname.startsWith('/member') && !authPaths.includes(location.pathname)) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <div className="flex flex-col">
@@ -36,11 +47,23 @@ function App() {
           <Route path="/doctors" element={<DoctorList />} />
           <Route path="/doctor/:id" element={<DoctorProfile />} />
           <Route path="/appointment" element={<Appointment />} />
-          <Route path="/member/profile" element={<Profile />} />
           <Route path='/member/login' element={<Login/>} />
           <Route path='/member/register' element={<Register/>} />
           <Route path='/member/getting-started' element={<CompleteProfile/>} />
-          <Route path='/member/home' element={<MemberHome />} />
+
+          {/* Protected */}
+          <Route path="/member/home" element={
+            <PrivateRoute><MemberHome /></PrivateRoute>
+          } />
+          <Route path="/member/profile" element={
+            <PrivateRoute><Profile /></PrivateRoute>
+          } />
+          <Route path="/member/choose-doctor" element={
+            <PrivateRoute><ChooseDoctor /></PrivateRoute>
+          } />
+          <Route path="/member/schedule-appointment" element={
+            <PrivateRoute><ScheduleAppointment /></PrivateRoute>
+          } />
         </Routes>
       </div>
       {homeLayout && <Footer />}
