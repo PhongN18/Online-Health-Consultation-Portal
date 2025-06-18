@@ -131,9 +131,11 @@ app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseStaticFiles();
+
 // app.UseAuthentication(); // nếu sau này có auth
 app.UseAuthorization();
-
+app.UseAuthentication();
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub"); // Đăng ký Hub endpoint
 app.Run();

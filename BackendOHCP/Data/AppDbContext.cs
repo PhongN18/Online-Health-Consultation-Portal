@@ -15,6 +15,7 @@ namespace BackendOHCP.Data
         public DbSet<Prescription> Prescriptions { get; set; }
         public DbSet<Message> Messages { get; set; }
 
+        public DbSet<VideoSession> VideoSessions { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder mb)
