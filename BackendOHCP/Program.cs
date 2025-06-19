@@ -78,7 +78,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             // THIS LINE IS CRITICAL
             RoleClaimType = ClaimTypes.Role
         };
+        // CHÚ Ý: Bổ sung đoạn này để SignalR lấy token từ query string khi dùng WebSocket!
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/chatHub"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
+
+builder.Services.AddSignalR();
+
+builder.Services.AddSignalR();
 
 // Add CORS service with specific policies
 builder.Services.AddCors(options =>
@@ -125,9 +143,11 @@ app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.UseStaticFiles();
+
 // app.UseAuthentication(); // nếu sau này có auth
 app.UseAuthorization();
-
+app.UseAuthentication();
 app.MapControllers();
 
 using (var scope = app.Services.CreateScope())
@@ -137,4 +157,5 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(context);
 }
 
+app.MapHub<ChatHub>("/chatHub"); // Đăng ký Hub endpoint
 app.Run();
