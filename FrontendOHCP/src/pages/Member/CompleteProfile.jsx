@@ -20,8 +20,6 @@ function CompleteProfile() {
 
     const [bgImage, setBgImage] = useState(null);
     const navigate = useNavigate();
-
-    console.log(location)
     
     useEffect(() => {
         const images = [bg1, bg2, bg3, bg4, bg5];
@@ -143,10 +141,10 @@ function CompleteProfile() {
                                             <div
                                                 key={g}
                                                 role="radio"
-                                                aria-checked={gender === g.toLowerCase()}
-                                                onClick={() => setGender(g.toLowerCase())}
+                                                aria-checked={gender === g}
+                                                onClick={() => setGender(g)}
                                                 className={`text-center font-bold px-6 py-2 rounded-lg cursor-pointer border-1
-                                                    ${gender === g.toLowerCase()
+                                                    ${gender === g
                                                         ? 'bg-[var(--primary-blue)] text-white border-[var(--primary-blue)]'
                                                         : 'text-[#6f777f] border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)]'}
                                                 `}

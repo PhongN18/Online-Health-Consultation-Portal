@@ -7,7 +7,7 @@ import bg4 from '../../assets/Auth/bg4.jpg';
 import bg5 from '../../assets/Auth/bg5.jpg';
 import axiosInstance from '../../utils/axios';
 
-function Register() {
+function MemberRegister() {
     const [bgImage, setBgImage] = useState(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -25,16 +25,17 @@ function Register() {
 
         try {
             // Send POST request to backend to create a user with email and password
-            const response = await axiosInstance.post('/api/Auth/register', {
+            const response = await axiosInstance.post('/api/auth/member/register', {
                 email,
                 password,
-                role: 'patient', // Patient role on registration
+                role: 'patient',
             });
 
             // After successful registration, redirect to the complete profile page with userId
             if (response.status === 200) {
                 console.log(response)
                 localStorage.setItem('token', response.data.token);
+                localStorage.setItem('role', 'member')
                 axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
                 navigate('/member/getting-started', { state: { userId: response.data.user.userId } });
             }
@@ -100,4 +101,4 @@ function Register() {
     );
 }
 
-export default Register;
+export default MemberRegister;
