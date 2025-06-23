@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BackendOHCP.Data;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 33))
     )
 );
-
-
 
 // 2. Đăng ký Web API và Swagger
 builder.Services.AddControllers();
@@ -32,7 +31,7 @@ builder.Services.AddSwaggerGen(c =>
     // Thêm cấu hình cho Bearer Token
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Description = @"JWT Authorization header using the Bearer scheme. 
+        Description = @"JWT Authorization header using the Bearer scheme.
                         Enter 'Bearer' [space] and then your token in the text input below.
                         Example: 'Bearer 12345abcdef'",
         Name = "Authorization",
@@ -70,10 +69,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+
+            // THIS LINE IS CRITICAL
+            RoleClaimType = ClaimTypes.Role
         };
         // CHÚ Ý: Bổ sung đoạn này để SignalR lấy token từ query string khi dùng WebSocket!
         options.Events = new JwtBearerEvents
@@ -92,6 +95,27 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddSignalR();
+
+builder.Services.AddSignalR();
+
+// Add CORS service with specific policies
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // Your frontend URL
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials(); // Allow cookies or credentials if necessary
+    });
+});
+
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new DateTimeConverterToGmt7());
+});
+
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 
@@ -112,6 +136,8 @@ else
     app.UseHsts();
 }
 
+app.UseCors("AllowSpecificOrigin");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -123,5 +149,13 @@ app.UseStaticFiles();
 app.UseAuthorization();
 app.UseAuthentication();
 app.MapControllers();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    DbInitializer.Initialize(context);
+}
+
 app.MapHub<ChatHub>("/chatHub"); // Đăng ký Hub endpoint
 app.Run();
