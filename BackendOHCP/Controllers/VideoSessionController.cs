@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using BackendOHCP.Data;
 using BackendOHCP.Models;
+using BackendOHCP.Models.Auth; // Thêm namespace này nếu để request model tại đây
 using System.Linq;
 
 [ApiController]
@@ -18,9 +19,11 @@ public class VideoSessionController : ControllerBase
     // Tạo video session khi appointment là "video"
     [Authorize]
     [HttpPost]
-    public IActionResult Create([FromBody] int appointmentId)
+    public IActionResult Create([FromBody] CreateVideoSessionRequest req)
     {
-        // Có thể kiểm tra xem appointment này đã có VideoSession chưa
+        var appointmentId = req.AppointmentId;
+
+        // Kiểm tra xem appointment này đã có VideoSession chưa
         if (_context.VideoSessions.Any(v => v.AppointmentId == appointmentId))
             return BadRequest(new { message = "Video session already exists." });
 

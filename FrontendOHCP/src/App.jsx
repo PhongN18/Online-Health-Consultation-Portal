@@ -22,6 +22,7 @@ import ProviderLogin from './pages/Provider/ProviderLogin';
 import ProviderRegister from './pages/Provider/ProviderRegister';
 import ProviderVerify from './pages/Provider/ProviderVerify';
 import PrivateRoute from './routes/PrivateRoute';
+import VideoCallPage from "./pages/VideoCallPage";
 
 function App() {
 
@@ -49,6 +50,7 @@ function App() {
     return <Navigate to="/member/home" replace />;
   }
 
+function App() {
   return (
     <div className="flex flex-col">
       {homeLayout && <Header />}
@@ -77,6 +79,7 @@ function App() {
           <Route path='/provider/login' element={<ProviderLogin />} />
           <Route path='/provider/register' element={<ProviderRegister />} />
           <Route path='/provider/verify' element={<ProviderVerify />} />
+          <Route path="/video-call/:appointmentId" element={<VideoCallPage />} />
 
           {/* Protected */}
           <Route path="/member/home" element={
