@@ -15,9 +15,7 @@ function ProviderVerify() {
     const [specialization, setSpecialization] = useState('');
     const [qualification, setQualification] = useState('');
     const [experienceYears, setExperienceYears] = useState('');
-
-    console.log(location);
-
+    
     useEffect(() => {
         if (!location.state || !location.state.userId) {
             navigate('/');

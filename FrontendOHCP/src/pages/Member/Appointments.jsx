@@ -1,4 +1,5 @@
 import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { UserContext } from '../../contexts/UserContext';
 import axiosInstance from "../../utils/axios";
 
@@ -6,13 +7,14 @@ function Appointment() {
     const [appointments, setAppointments] = useState([]);
     const { user, loading: userLoading } = useContext(UserContext);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchAppointments = async () => {
             if (!user || userLoading) return;
 
             try {
-                const res = await axiosInstance.get(`/api/appointments/${user.userId}`, {
+                const res = await axiosInstance.get(`/api/appointments/member/${user.userId}`, {
                     headers: {
                         Authorization: `Bearer ${localStorage.getItem('token')}`
                     }
@@ -32,8 +34,6 @@ function Appointment() {
     if (userLoading || loading) return <div>Loading appointments...</div>;
     if (!user) return <div>User not logged in.</div>;
 
-    console.log(appointments);
-
     return (
         <div className="min-h-screen p-6 bg-[#f8f9fa] flex justify-center">
             <div className="w-[1000px]">
@@ -49,6 +49,7 @@ function Appointment() {
                             <div
                                 key={appointment.appointmentId}
                                 className="bg-white rounded-2xl shadow-md p-4 flex gap-4 items-center"
+                                onClick={() => navigate(`/member/appointment/${appointment.appointmentId}`)}
                             >
                                 {/* Doctor Image */}
                                 <div className="w-20 h-20 flex-shrink-0 rounded-full bg-blue-100 overflow-hidden">

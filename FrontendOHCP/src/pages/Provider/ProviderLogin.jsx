@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { UserContext } from '@/contexts/UserContext';
+import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axios';
 
@@ -7,6 +8,7 @@ function ProviderLogin() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const navigate = useNavigate()
+    const { refetchUser } = useContext(UserContext)
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -26,8 +28,7 @@ function ProviderLogin() {
             // ✅ Set token in Axios for future requests
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-            const userInfo = await axiosInstance.get('/api/auth/provider/me');
-
+            await refetchUser();
             navigate('/provider/home')
 
         } catch (err) {

@@ -8,7 +8,7 @@ public class Appointment
     public string CareOption { get; set; } = null!;
     public string Status { get; set; } = "Scheduled";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
+    public string? CancelReason { get; set; }
     public User Patient { get; set; } = null!;
     public User Doctor { get; set; } = null!;
 }

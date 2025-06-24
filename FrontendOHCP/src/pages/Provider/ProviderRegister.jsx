@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { UserContext } from '@/contexts/UserContext';
+import { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axiosInstance from '../../utils/axios';
 
@@ -7,6 +8,7 @@ function ProviderRegister() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const navigate = useNavigate()
+    const { refetchUser } = useContext(UserContext)
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -29,6 +31,7 @@ function ProviderRegister() {
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
             // Redirect to profile completion page with userId
+            await refetchUser()
             navigate('/provider/verify', { state: { userId } });
 
         } catch (err) {

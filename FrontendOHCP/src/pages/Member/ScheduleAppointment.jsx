@@ -21,10 +21,8 @@ function ScheduleAppointment() {
             const date = new Date();
             date.setDate(date.getDate() + i);
             date.setHours(7,0,0,0) // GMT + 7
-            console.log(date)
             const label = date.toLocaleDateString('en-US', options);
             const iso = date.toISOString().split('T')[0];
-            
             days.push({ label, iso });
         }
 

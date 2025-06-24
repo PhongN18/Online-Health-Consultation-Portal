@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { UserContext } from '@/contexts/UserContext';
+import { useContext, useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import bg1 from '../../assets/Auth/bg1.jpg';
 import bg2 from '../../assets/Auth/bg2.jpg';
@@ -16,10 +17,9 @@ function CompleteProfile() {
     const [dobDay, setDobDay] = useState('');
     const [dobMonth, setDobMonth] = useState('');
     const [dobYear, setDobYear] = useState('');
-
-
     const [bgImage, setBgImage] = useState(null);
     const navigate = useNavigate();
+    const { refetchUser } = useContext(UserContext)
     
     useEffect(() => {
         const images = [bg1, bg2, bg3, bg4, bg5];
@@ -56,8 +56,7 @@ function CompleteProfile() {
             });
 
             if (response.status === 200) {
-                console.log(response)
-                // Successfully updated, navigate to next step or dashboard
+                await refetchUser()
                 navigate('/member/home'); // Redirect to the dashboard
             }
         } catch (error) {

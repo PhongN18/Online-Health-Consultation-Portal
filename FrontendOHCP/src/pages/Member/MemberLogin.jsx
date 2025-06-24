@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { UserContext } from '@/contexts/UserContext';
+import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import bg1 from '../../assets/Auth/bg1.jpg';
 import bg2 from '../../assets/Auth/bg2.jpg';
@@ -12,6 +13,7 @@ function MemberLogin() {
     const [bgImage, setBgImage] = useState(null);
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    const { refetchUser } = useContext(UserContext)
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -38,8 +40,7 @@ function MemberLogin() {
             // ✅ Set token in Axios for future requests
             axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 
-            const userInfo = await axiosInstance.get('/api/auth/member/me');
-
+            await refetchUser()
             navigate('/member/home')
 
         } catch (err) {

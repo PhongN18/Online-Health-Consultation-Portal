@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
 import axiosInstance from '../../utils/axios';
 
@@ -8,7 +8,9 @@ const timeSlots = ['08:00', '10:30', '14:00', '16:30', '20:30'];
 function ProviderAppointments() {
     const { user } = useContext(UserContext);
     const location = useLocation();
-    const [appointments, setAppointments] = useState([]);
+    const navigate = useNavigate();
+    const [upcomingAppointments, setUpcomingAppointments] = useState([]);
+    const [pastAppointments, setPastAppointments] = useState([])
 
     const days = Array.from({ length: 8 }, (_, i) => {
         const date = new Date();
@@ -22,17 +24,8 @@ function ProviderAppointments() {
         const fetchAppointments = async () => {
             try {
                 const res = await axiosInstance.get(`/api/appointments/doctor/${user.userId}`);
-                const now = new Date();
-                const end = new Date();
-                now.setHours(0, 0, 0, 0);
-                end.setDate(end.getDate() + 8);
-
-                const filtered = res.data.upcoming.filter(appt => {
-                    const apptTime = new Date(appt.appointmentTime + "Z");
-                    return apptTime >= now && apptTime <= end;
-                });
-                
-                setAppointments(filtered);
+                setUpcomingAppointments(res.data.upcoming);
+                setPastAppointments(res.data.past);
             } catch (err) {
                 console.error('Failed to fetch appointments:', err);
             }
@@ -46,7 +39,7 @@ function ProviderAppointments() {
         const localDate = new Date(date);
         localDate.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
-        return appointments.find(appt => {
+        return upcomingAppointments.find(appt => {
             const apptUTC = new Date(appt.appointmentTime + "Z");
             const localUTC = new Date(localDate.toISOString());
             return apptUTC.getTime() === localUTC.getTime();
@@ -75,22 +68,23 @@ function ProviderAppointments() {
 
         const now = new Date()
         const apptTime = new Date(appt.appointmentTime + "Z")
-        if (apptTime < now) return 'bg-gray-300 text-gray-600'
+        if (apptTime < now) return 'hover:scale-90 transition-all duration-200 ease-in-out bg-gray-300 text-gray-600'
 
         switch (appt.status) {
-            case 'Scheduled': return 'bg-green-200 text-green-800';
-            case 'Pending': return 'bg-yellow-200 text-yellow-800';
-            case 'Cancelled': return 'bg-gray-300 text-gray-600 line-through';
+            case 'Scheduled': return 'hover:scale-90 transition-all duration-200 ease-in-out bg-green-200 text-green-800';
+            case 'Pending': return 'hover:scale-90 transition-all duration-200 ease-in-out bg-yellow-200 text-yellow-800';
+            case 'Cancelled': return 'hover:scale-90 transition-all duration-200 ease-in-out bg-gray-300 text-gray-600 line-through';
             default: return '';
         }
     };
 
-    console.log(appointments)
+    console.log(upcomingAppointments)
 
     return (
         <div className="min-h-screen bg-gray-50 p-8 flex justify-center">
             <div className="flex flex-col items-center">
-                <div className="text-2xl font-bold text-gray-800 mb-6 w-[1000px]">My Appointments</div>
+                <div className="text-2xl font-bold text-gray-800 w-[1200px]">Schedule</div>
+                <p className='mb-6 w-[1200px] text-gray-600'>Today and the next 7 days</p>
                 <div className="overflow-auto w-[1200px]">
                     <table className="min-w-full table-fixed border border-gray-300">
                         <thead>
@@ -124,21 +118,23 @@ function ProviderAppointments() {
                                                 appt ? getCellStyle(appt) : ''
                                             }`}
                                         >
-                                        {appt ? (
-                                            <>
-                                                <p className="text-sm">{appt.careOption}</p>
-                                                <p className="font-semibold">
-                                                    {appt.patient?.fullName || 'N/A'}
-                                                </p>
-                                                <p className="text-xs">
-                                                    {appt.patient.gender} - {getAge(appt.patient.dateOfBirth)}{' '}
-                                                    years old
-                                                </p>
-                                                <p className="text-xs capitalize">{appt.status}</p>
-                                            </>
-                                        ) : (
-                                            <span className="text-gray-300">-</span>
-                                        )}
+                                            {appt ? (
+                                                <button
+                                                    onClick={() => navigate(`/provider/appointment/${appt.appointmentId}`)}
+                                                    className={`w-full h-full text-center hover:font-semibold rounded-md transition cursor-pointer focus:outline-none`}
+                                                >
+                                                    <p className="text-sm">{appt.careOption}</p>
+                                                    <p className="font-semibold">
+                                                        {appt.patient?.fullName || 'N/A'}
+                                                    </p>
+                                                    <p className="text-xs">
+                                                        {appt.patient.gender} - Age: {getAge(appt.patient.dateOfBirth)}
+                                                    </p>
+                                                    <p className="text-xs capitalize">{appt.status}</p>
+                                                </button>
+                                            ) : (
+                                                <span className="text-gray-300">-</span>
+                                            )}
                                         </td>
                                     );
                                     })}
@@ -146,6 +142,46 @@ function ProviderAppointments() {
                             ))}
                         </tbody>
                     </table>
+                </div>
+                <div className="mt-10 w-[1200px]">
+                    <div className="text-2xl font-bold text-gray-800 mb-4">Past Appointments</div>
+                    <div className="grid grid-cols-2 gap-4">
+                        {pastAppointments.slice(0, 10).map((appt) => (
+                            <div
+                                key={appt.appointmentId}
+                                className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition"
+                            >
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <p className="text-lg font-semibold text-[var(--primary-blue)]">
+                                            {appt.patient?.fullName || "Unknown Patient"}
+                                        </p>
+                                        <p className="text-sm text-gray-600">
+                                            {appt.patient?.gender} - {appt.patient?.dateOfBirth ? `${getAge(appt.patient.dateOfBirth)} years old` : 'N/A'}
+                                        </p>
+                                    </div>
+                                    <div className="text-sm text-right text-gray-500">
+                                        {new Date(appt.appointmentTime).toLocaleString("en-GB", {
+                                            timeZone: "Asia/Ho_Chi_Minh",
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            year: "numeric",
+                                            hour: "2-digit",
+                                            minute: "2-digit"
+                                        })}
+                                        <br />
+                                        <span className="capitalize">{appt.mode} | {appt.careOption}</span>
+                                    </div>
+                                </div>
+                                <div className="mt-2 text-sm text-gray-700 capitalize">
+                                    <strong>Status:</strong> {appt.status}
+                                </div>
+                            </div>
+                        ))}
+                        {pastAppointments.length === 0 && (
+                            <p className="text-gray-500 col-span-2 text-center py-4">No past appointments found.</p>
+                        )}
+                    </div>
                 </div>
             </div>
         </div>

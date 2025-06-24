@@ -8,9 +8,6 @@ function Checkout() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user: patient, loading: userLoading } = useContext(UserContext);
-
-    console.log("1", patient)
-
     const { doctor, selectedTime, selectedDate, selectedDateISO, careOption } = location.state || {};
 
     useEffect(() => {
@@ -59,7 +56,7 @@ function Checkout() {
         <div className="min-h-screen flex flex-col bg-[#f8f9fa] items-center">
             <div className="w-[1000px] py-8 flex flex-col justify-center items-center">
                 <div className='relative w-full'>
-                    <Link to='/member/choose-doctor' className='absolute top-[20%] left-0 text-[#6c747c] hover:underline'>Back</Link>
+                    <Link to='/member/home' className='absolute top-[20%] left-0 text-[#6c747c] hover:underline'>Back</Link>
                     <h4 className='w-full text-center text-3xl font-semibold'>Checkout</h4>
                 </div>
                 <div className="w-full bg-white rounded-2xl p-10 mt-8 grid grid-cols-2 gap-8">

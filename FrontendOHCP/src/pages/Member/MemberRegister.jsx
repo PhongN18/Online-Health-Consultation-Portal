@@ -33,7 +33,6 @@ function MemberRegister() {
 
             // After successful registration, redirect to the complete profile page with userId
             if (response.status === 200) {
-                console.log(response)
                 localStorage.setItem('token', response.data.token);
                 localStorage.setItem('role', 'member')
                 axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
