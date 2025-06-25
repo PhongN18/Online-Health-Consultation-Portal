@@ -270,6 +270,39 @@ namespace BackendOHCP.Controllers
 
             return Ok(appt);
         }
+        
+        [HttpGet("{id}")]
+        public IActionResult GetAppointment(int id)
+        {
+            var appointment = _context.Appointments
+                .Include(a => a.Doctor)
+                .Include(a => a.Patient)         // include thêm Patient
+                .FirstOrDefault(a => a.AppointmentId == id);
+
+            if (appointment == null)
+                return NotFound();
+
+            return Ok(new {
+                appointment.AppointmentId,
+                appointment.Mode,
+                appointment.PatientId,
+                appointment.DoctorId,
+                Doctor = appointment.Doctor == null
+                    ? null
+                    : new {
+                        appointment.Doctor.UserId,
+                        appointment.Doctor.FirstName,
+                        appointment.Doctor.LastName
+                    },
+                Patient = appointment.Patient == null
+                    ? null
+                    : new {
+                        appointment.Patient.UserId,
+                        appointment.Patient.FirstName,
+                        appointment.Patient.LastName
+                    }
+            });
+        }
 
     }
 }

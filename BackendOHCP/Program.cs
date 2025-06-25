@@ -3,12 +3,13 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using BackendOHCP.Data;
 using System.Security.Claims;
+using BackendOHCP.Data;
+using BackendOHCP.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Đăng ký AppDbContext với MySQL
+// === 1. Database Context ===
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
@@ -16,7 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-// 2. Đăng ký Web API và Swagger
+// === 2. Controllers & Swagger ===
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -28,38 +29,47 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Online Health Consultation Portal backend"
     });
 
-    // Thêm cấu hình cho Bearer Token
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = @"JWT Authorization header using the Bearer scheme.
-                        Enter 'Bearer' [space] and then your token in the text input below.
-                        Example: 'Bearer 12345abcdef'",
+        Description = @"JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below. Example: 'Bearer 12345abcdef'",
         Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
 
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement()
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 },
                 Scheme = "oauth2",
                 Name = "Bearer",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                In = ParameterLocation.Header,
             },
             new List<string>()
         }
     });
 });
 
+// === 3. CORS ===
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // Needed for SignalR
+    });
+});
 
+// === 4. JWT Authentication ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -75,10 +85,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
 
-            // THIS LINE IS CRITICAL
-            RoleClaimType = ClaimTypes.Role
+            RoleClaimType = ClaimTypes.Role // This line is critical
         };
-        // CHÚ Ý: Bổ sung đoạn này để SignalR lấy token từ query string khi dùng WebSocket!
+
+        // SignalR: accept token from query string
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -94,32 +104,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// === 5. SignalR ===
 builder.Services.AddSignalR();
 
-builder.Services.AddSignalR();
-
-// Add CORS service with specific policies
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin", policy =>
-    {
-        policy.WithOrigins("http://localhost:5173") // Your frontend URL
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials(); // Allow cookies or credentials if necessary
-    });
-});
-
+// === 6. JSON Config ===
 builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
 {
     options.SerializerOptions.Converters.Add(new DateTimeConverterToGmt7());
 });
 
+// === 7. Services ===
 builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 
-// 3. Cấu hình middleware
+// === 8. Middleware ===
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -127,7 +126,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "backendOHCP API v1");
-        // c.RoutePrefix = string.Empty; // nếu bạn muốn swagger ở root
     });
 }
 else
@@ -136,20 +134,21 @@ else
     app.UseHsts();
 }
 
-app.UseCors("AllowSpecificOrigin");
-
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseHttpsRedirection();
-app.UseRouting();
 app.UseStaticFiles();
+app.UseRouting();
 
-// app.UseAuthentication(); // nếu sau này có auth
-app.UseAuthorization();
+// 🔐 CORS before Auth for REST + SignalR
+app.UseCors("AllowReactApp");
+
 app.UseAuthentication();
-app.MapControllers();
+app.UseAuthorization();
 
+// === 9. Endpoints ===
+app.MapControllers();
+app.MapHub<ChatHub>("/chatHub");
+
+// === 10. DB Initialization ===
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -157,5 +156,4 @@ using (var scope = app.Services.CreateScope())
     DbInitializer.Initialize(context);
 }
 
-app.MapHub<ChatHub>("/chatHub"); // Đăng ký Hub endpoint
 app.Run();
