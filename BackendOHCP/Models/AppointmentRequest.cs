@@ -16,5 +16,7 @@ namespace BackendOHCP.Models
 
         // Chế độ hẹn (video, audio, chat...) (Không bắt buộc)
         public string Mode { get; set; } = string.Empty;  // Mặc định là string rỗng
+        public string CareOption { get; set; } = "Primary Care";
+        public string? CancelReason { get; set; } = string.Empty;
     }
 }

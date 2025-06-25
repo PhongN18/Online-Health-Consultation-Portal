@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BackendOHCP.Data;
 using BackendOHCP.Models;
+using System.Security.Claims;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace BackendOHCP.Controllers
 {
@@ -41,8 +43,9 @@ namespace BackendOHCP.Controllers
                 PatientId = request.PatientId,
                 DoctorId = request.DoctorId,
                 AppointmentTime = request.AppointmentTime,
-                Mode = request.Mode,
-                Status = "scheduled", // Chế độ mặc định là scheduled
+                CareOption = request.CareOption,
+                Mode = "Video",
+                Status = "Scheduled", // Chế độ mặc định là scheduled
                 CreatedAt = DateTime.UtcNow
             };
 
@@ -52,33 +55,131 @@ namespace BackendOHCP.Controllers
             return Ok(newAppointment);
         }
 
-        // 2. Bác sĩ hoặc admin xem lịch hẹn của mình (hoặc toàn bộ)
-        [Authorize(Roles = "doctor,admin")]
-        [HttpGet]
-        public IActionResult GetAppointments([FromQuery] int? doctorId, [FromQuery] int? patientId)
+        [Authorize(Roles = "patient")]
+        [HttpGet("member/{userId}")]
+        public IActionResult GetPatientAppointments(int userId)
         {
-            IQueryable<Appointment> query = _context.Appointments;
-
-            // Admin có thể xem hết, doctor chỉ xem của mình
-            if (User.IsInRole("doctor"))
-            {
-                // Lấy doctorId từ User.Claims nếu có logic xác thực nâng cao
-                if (doctorId == null) return BadRequest(new { message = "Missing doctorId." });
-                query = query.Where(a => a.DoctorId == doctorId.Value);
-            }
-            else if (User.IsInRole("admin"))
-            {
-                if (doctorId != null)
-                    query = query.Where(a => a.DoctorId == doctorId.Value);
-                if (patientId != null)
-                    query = query.Where(a => a.PatientId == patientId.Value);
-            }
-
-            var appointments = query
+            // Load appointments where the logged-in user is the patient
+            var appointments = _context.Appointments
+                .Where(a => a.Patient.UserId == userId)
+                .Include(a => a.Doctor)
+                    .ThenInclude(d => d.DoctorProfile)
                 .OrderBy(a => a.AppointmentTime)
+                .Select(a => new
+                {
+                    a.AppointmentId,
+                    a.AppointmentTime,
+                    a.Mode,
+                    a.CareOption,
+                    a.Status,
+                    a.CreatedAt,
+                    Doctor = new
+                    {
+                        a.Doctor.UserId,
+                        FullName = a.Doctor.FirstName + " " + a.Doctor.LastName,
+                        a.Doctor.Email,
+                        a.Doctor.DoctorProfile.Specialization,
+                        a.Doctor.DoctorProfile.Qualification,
+                        a.Doctor.DoctorProfile.ExperienceYears,
+                        a.Doctor.DoctorProfile.Rating
+                    }
+                })
                 .ToList();
 
             return Ok(appointments);
+        }
+
+        [Authorize(Roles = "patient, doctor, admin")]
+        [HttpGet("doctor/{doctorId}")]
+        public IActionResult GetDoctorAppointments(int doctorId)
+        {
+            if (doctorId <= 0)
+                return BadRequest(new { message = "Invalid or missing doctorId." });
+
+            var now = DateTime.UtcNow;
+            var today = now.Date;
+            var next7Days = today.AddDays(7);
+
+            var allAppointments = _context.Appointments
+                .Where(a => a.DoctorId == doctorId)
+                .Include(a => a.Patient)
+                .ToList();
+
+            var upcoming = allAppointments
+                .Where(a =>
+                    a.AppointmentTime.Date >= today &&
+                    a.AppointmentTime.Date <= next7Days &&
+                    a.Status == "Scheduled") // ✅ only Scheduled appointments
+                .OrderBy(a => a.AppointmentTime)
+                .Select(a => new
+                {
+                    a.AppointmentId,
+                    a.AppointmentTime,
+                    a.Mode,
+                    a.CareOption,
+                    a.Status,
+                    a.CreatedAt,
+                    Patient = new
+                    {
+                        a.Patient.UserId,
+                        FullName = a.Patient.FirstName + " " + a.Patient.LastName,
+                        a.Patient.Email,
+                        a.Patient.Gender,
+                        a.Patient.DateOfBirth
+                    }
+                })
+                .ToList();
+
+            var past = allAppointments
+                .Where(a =>
+                    a.AppointmentTime.Date < today || a.Status != "Scheduled") // ✅ any status not Scheduled or earlier than today
+                .OrderByDescending(a => a.AppointmentTime)
+                .Select(a => new
+                {
+                    a.AppointmentId,
+                    a.AppointmentTime,
+                    a.Mode,
+                    a.CareOption,
+                    a.Status,
+                    a.CreatedAt,
+                    Patient = new
+                    {
+                        a.Patient.UserId,
+                        FullName = a.Patient.FirstName + " " + a.Patient.LastName,
+                        a.Patient.Email,
+                        a.Patient.Gender,
+                        a.Patient.DateOfBirth
+                    }
+                })
+                .ToList();
+
+            var all = allAppointments
+                .OrderBy(a => a.AppointmentTime)
+                .Select(a => new
+                {
+                    a.AppointmentId,
+                    a.AppointmentTime,
+                    a.Mode,
+                    a.CareOption,
+                    a.Status,
+                    a.CreatedAt,
+                    Patient = new
+                    {
+                        a.Patient.UserId,
+                        FullName = a.Patient.FirstName + " " + a.Patient.LastName,
+                        a.Patient.Email,
+                        a.Patient.Gender,
+                        a.Patient.DateOfBirth
+                    }
+                })
+                .ToList();
+
+            return Ok(new
+            {
+                all,
+                upcoming,
+                past
+            });
         }
 
         // 3. Bệnh nhân/doctor reschedule (đổi lịch)
@@ -115,43 +216,59 @@ namespace BackendOHCP.Controllers
 
 
         // 4. Bệnh nhân/doctor/admin hủy lịch
-        // DELETE: api/Appointments/{id}
+        // PUT: api/Appointments/{id}/cancel
         [Authorize(Roles = "patient,doctor,admin")]
-        [HttpDelete("{id}")]
-        public IActionResult CancelAppointment(int id)
+        [HttpPut("{id}/cancel")]
+        public IActionResult CancelAppointment(int id, [FromBody] CancelRequest req)
         {
-            var appointment = _context.Appointments.Find(id);
+            var appointment = _context.Appointments.FirstOrDefault(a => a.AppointmentId == id);
             if (appointment == null)
                 return NotFound(new { message = "Appointment not found." });
 
-            _context.Appointments.Remove(appointment);
+            // Update appointment instead of deleting
+            appointment.Status = "Cancelled";
+            appointment.CancelReason = req.Reason ?? "Cancelled by user";
             _context.SaveChanges();
 
-            return Ok(new { message = "Appointment canceled." });
+            return Ok(new { message = "Appointment status updated to Cancelled." });
         }
 
-
-        // 5. (Nâng cao) Xem các slot trống của doctor theo ngày
-        // GET: api/Appointments/doctor/{doctorId}/available-slots
-        [Authorize(Roles = "patient,doctor,admin")]
-        [HttpGet("doctor/{doctorId}/available-slots")]
-        public IActionResult GetAvailableSlots(int doctorId, [FromQuery] DateTime date)
+        // DTO class
+        public class CancelRequest
         {
-            // Giả sử một ngày khám từ 8h đến 17h, mỗi slot 1 giờ
-            var allSlots = Enumerable.Range(8, 10)
-                .Select(h => new DateTime(date.Year, date.Month, date.Day, h, 0, 0))
-                .ToList();
+            public string Reason { get; set; }
+        }
 
-            var bookedSlots = _context.Appointments
-                .Where(a => a.DoctorId == doctorId && a.AppointmentTime.Date == date.Date)
-                .Select(a => a.AppointmentTime)
-                .ToList();
+        [Authorize(Roles = "patient,doctor,admin")]
+        [HttpGet("{id}")]
+        public IActionResult GetAppointmentById(int id)
+        {
+            var appt = _context.Appointments
+                .Include(a => a.Patient)
+                .Where(a => a.AppointmentId == id)
+                .Select(a => new
+                {
+                    a.AppointmentId,
+                    a.AppointmentTime,
+                    a.Mode,
+                    a.CareOption,
+                    a.Status,
+                    a.CreatedAt,
+                    Patient = new
+                    {
+                        a.Patient.UserId,
+                        FullName = a.Patient.FirstName + " " + a.Patient.LastName,
+                        a.Patient.Email,
+                        a.Patient.Gender,
+                        a.Patient.DateOfBirth
+                    }
+                })
+                .FirstOrDefault();
 
-            var availableSlots = allSlots
-                .Where(slot => !bookedSlots.Any(booked => booked.Hour == slot.Hour))
-                .ToList();
+            if (appt == null)
+                return NotFound(new { message = "Appointment not found." });
 
-            return Ok(availableSlots);
+            return Ok(appt);
         }
         
         [HttpGet("{id}")]

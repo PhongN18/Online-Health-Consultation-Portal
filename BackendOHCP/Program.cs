@@ -3,12 +3,13 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Security.Claims;
 using BackendOHCP.Data;
-using BackendOHCP.Hubs;// Đảm bảo import đúng namespace chứa ChatHub
+using BackendOHCP.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Đăng ký AppDbContext với MySQL
+// === 1. Database Context ===
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection")!,
@@ -16,7 +17,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     )
 );
 
-// 2. Đăng ký Web API và Swagger
+// === 2. Controllers & Swagger ===
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -30,9 +31,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = @"JWT Authorization header using the Bearer scheme. 
-                        Enter 'Bearer' [space] and then your token in the text input below.
-                        Example: 'Bearer 12345abcdef'",
+        Description = @"JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below. Example: 'Bearer 12345abcdef'",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.ApiKey,
@@ -58,20 +57,19 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// ===== CORS CHUẨN CHO REACT VỚI SIGNALR =====
+// === 3. CORS ===
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", policy =>
     {
-        policy
-            .WithOrigins("http://localhost:5173") // FE chạy port này
+        policy.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
-            .AllowCredentials(); // SignalR cần dòng này
+            .AllowCredentials(); // Needed for SignalR
     });
 });
 
-// Authentication JWT + SignalR websocket hỗ trợ
+// === 4. JWT Authentication ===
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -81,12 +79,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
+
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+
+            RoleClaimType = ClaimTypes.Role // This line is critical
         };
-        // SignalR websocket lấy token qua query string
+
+        // SignalR: accept token from query string
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -102,11 +104,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// === 5. SignalR ===
 builder.Services.AddSignalR();
+
+// === 6. JSON Config ===
+builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+{
+    options.SerializerOptions.Converters.Add(new DateTimeConverterToGmt7());
+});
+
+// === 7. Services ===
+builder.Services.AddScoped<AuthService>();
 
 var app = builder.Build();
 
-// === MIDDLEWARE ===
+// === 8. Middleware ===
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -124,17 +136,24 @@ else
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 
-// ==== ĐẶT UseCors TRƯỚC Authentication + SignalR ====
-// Quan trọng: đặt ở đây để REST & SignalR đều được CORS!
+// 🔐 CORS before Auth for REST + SignalR
 app.UseCors("AllowReactApp");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// === 9. Endpoints ===
 app.MapControllers();
 app.MapHub<ChatHub>("/chatHub");
+
+// === 10. DB Initialization ===
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<AppDbContext>();
+    DbInitializer.Initialize(context);
+}
 
 app.Run();
