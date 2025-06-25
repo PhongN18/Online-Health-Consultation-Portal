@@ -11,4 +11,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, 'src'),
     },
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5232', // Cổng backend ASP.NET Core thực tế
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 })

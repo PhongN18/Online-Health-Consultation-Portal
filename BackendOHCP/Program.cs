@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using BackendOHCP.Data;
+using BackendOHCP.Hubs;// Đảm bảo import đúng namespace chứa ChatHub
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,8 +15,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 33))
     )
 );
-
-
 
 // 2. Đăng ký Web API và Swagger
 builder.Services.AddControllers();
@@ -29,38 +28,50 @@ builder.Services.AddSwaggerGen(c =>
         Description = "Online Health Consultation Portal backend"
     });
 
-    // Thêm cấu hình cho Bearer Token
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = @"JWT Authorization header using the Bearer scheme. 
                         Enter 'Bearer' [space] and then your token in the text input below.
                         Example: 'Bearer 12345abcdef'",
         Name = "Authorization",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
         Scheme = "Bearer"
     });
 
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement()
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement()
     {
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            new OpenApiSecurityScheme
             {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                Reference = new OpenApiReference
                 {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Type = ReferenceType.SecurityScheme,
                     Id = "Bearer"
                 },
                 Scheme = "oauth2",
                 Name = "Bearer",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+                In = ParameterLocation.Header,
             },
             new List<string>()
         }
     });
 });
 
+// ===== CORS CHUẨN CHO REACT VỚI SIGNALR =====
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173") // FE chạy port này
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // SignalR cần dòng này
+    });
+});
 
+// Authentication JWT + SignalR websocket hỗ trợ
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -75,7 +86,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
         };
-        // CHÚ Ý: Bổ sung đoạn này để SignalR lấy token từ query string khi dùng WebSocket!
+        // SignalR websocket lấy token qua query string
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -95,7 +106,7 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// 3. Cấu hình middleware
+// === MIDDLEWARE ===
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -103,7 +114,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "backendOHCP API v1");
-        // c.RoutePrefix = string.Empty; // nếu bạn muốn swagger ở root
     });
 }
 else
@@ -112,16 +122,19 @@ else
     app.UseHsts();
 }
 
-app.UseAuthentication();
-app.UseAuthorization();
-
 app.UseHttpsRedirection();
-app.UseRouting();
 app.UseStaticFiles();
 
-// app.UseAuthentication(); // nếu sau này có auth
-app.UseAuthorization();
+app.UseRouting();
+
+// ==== ĐẶT UseCors TRƯỚC Authentication + SignalR ====
+// Quan trọng: đặt ở đây để REST & SignalR đều được CORS!
+app.UseCors("AllowReactApp");
+
 app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapControllers();
-app.MapHub<ChatHub>("/chatHub"); // Đăng ký Hub endpoint
+app.MapHub<ChatHub>("/chatHub");
+
 app.Run();

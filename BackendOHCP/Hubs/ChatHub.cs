@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using BackendOHCP.Data;
 using BackendOHCP.Models;
 using Microsoft.AspNetCore.Authorization;
+namespace BackendOHCP.Hubs;
 
 [Authorize]
 public class ChatHub : Hub
@@ -13,21 +14,20 @@ public class ChatHub : Hub
     }
 
     // Gửi tin nhắn realtime + lưu vào DB
-    public async Task SendMessage(int senderId, int receiverId, string content)
+    public async Task SendMessage(int senderId, int receiverId, string content, int appointmentId)
     {
-        // 1. Lưu vào DB
         var message = new Message
         {
             SenderId = senderId,
             ReceiverId = receiverId,
             Content = content,
             SentAt = DateTime.UtcNow,
-            IsRead = false
+            IsRead = false,
+            AppointmentId = appointmentId
         };
         _context.Messages.Add(message);
         await _context.SaveChangesAsync();
 
-        // 2. Gửi tới receiver (theo UserId)
         await Clients.User(receiverId.ToString()).SendAsync(
             "ReceiveMessage",
             new
@@ -36,11 +36,10 @@ public class ChatHub : Hub
                 message.SenderId,
                 message.ReceiverId,
                 message.Content,
-                message.SentAt
+                message.SentAt,
+                message.AppointmentId
             }
         );
-
-        // 3. (Optional) Gửi lại chính sender để cập nhật UI
         await Clients.User(senderId.ToString()).SendAsync(
             "ReceiveMessage",
             new
@@ -49,10 +48,12 @@ public class ChatHub : Hub
                 message.SenderId,
                 message.ReceiverId,
                 message.Content,
-                message.SentAt
+                message.SentAt,
+                message.AppointmentId
             }
         );
     }
+
 
     // Kết nối: map ConnectionId với UserId (dùng Claim)
     public override async Task OnConnectedAsync()

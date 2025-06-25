@@ -6,6 +6,7 @@ import Appointments from "./pages/Appointments";
 import MedicalRecords from "./pages/MedicalRecords";
 import Navbar from "./components/Navbar";
 import VideoCallPage from "./pages/VideoCallPage";
+import ChatConsultationPage from './pages/ChatConsultationPage';
 
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/appointments" element={<Appointments />} />
         <Route path="/medical-records" element={<MedicalRecords />} />
         <Route path="/video-call/:appointmentId" element={<VideoCallPage />} />
+        <Route path="/chat/:appointmentId" element={<ChatConsultationPage />} />
       </Routes>
     </Router>
   );
