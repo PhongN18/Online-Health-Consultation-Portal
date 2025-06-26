@@ -76,11 +76,25 @@ function MemberAppointmentDetail() {
         }
     };
 
+    const handleJoinConsultation = () => {
+        if (!appointment?.mode || !appointment?.appointmentId) return;
+        const path = appointment.mode === 'Video' ? 'video' : 'chat';
+        navigate(`/member/${path}/${appointment.appointmentId}`);
+    };
+
     if (loading) return <div className="p-8 text-gray-500">Loading appointment...</div>;
     if (!appointment) return <div className="p-8 text-red-500">Appointment not found.</div>;
-
+    
     return (
         <div className="min-h-screen bg-gray-50 p-10">
+            <div className="max-w-3xl mx-auto mb-4">
+                <Link
+                    to="/provider/appointments"
+                    className="text-[var(--primary-blue)] hover:text-[var(--dark-blue)] transition"
+                >
+                    Back to Appointments
+                </Link>
+            </div>
             <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
                 <h2 className="text-2xl font-bold text-[var(--primary-blue)] mb-6">
                     Appointment Details
@@ -95,23 +109,27 @@ function MemberAppointmentDetail() {
                 </div>
 
                 <hr className="my-4" />
-
                 <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">Patient Information</h3>
-                    <p><span className="font-semibold">Name:</span> {appointment.patient?.fullName}</p>
-                    <p><span className="font-semibold">Email:</span> {appointment.patient?.email}</p>
-                    <p><span className="font-semibold">Gender:</span> {appointment.patient?.gender}</p>
-                    <p><span className="font-semibold">Age:</span> {getAge(appointment.patient?.dateOfBirth)}</p>
-                    <p><span className="font-semibold">Date of Birth:</span> {new Date(appointment.patient?.dateOfBirth).toLocaleDateString('en-GB')}</p>
+                    <h3 className="text-xl font-semibold mb-2 text-gray-700">Doctor Information</h3>
+                    <p><span className="font-semibold">Name:</span> {appointment.doctor?.fullName}</p>
+                    <p><span className="font-semibold">Email:</span> {appointment.doctor?.email}</p>
+                    <p><span className="font-semibold">Gender:</span> {appointment.doctor?.gender}</p>
+                    <p><span className="font-semibold">Specialization:</span> {appointment.doctor?.specialization || "N/A"}</p>
+                    <p><span className="font-semibold">Qualification:</span> {appointment.doctor?.qualification || "N/A"}</p>
+                    <p><span className="font-semibold">Experience:</span> {appointment.doctor?.experienceYears} years</p>
+                    <p><span className="font-semibold">Rating:</span> {appointment.doctor?.rating?.toFixed(1) ?? "N/A"}</p>
                 </div>
 
+
                 <div className="mt-8 flex justify-between">
-                    <Link
-                        to="/provider/appointments"
-                        className="bg-[var(--primary-blue)] text-white px-4 py-2 rounded hover:bg-[var(--dark-blue)] transition"
-                    >
-                        Back to Appointments
-                    </Link>
+                    {appointment.status === 'Scheduled' && (appointment.mode === 'Video' || appointment.mode === 'Chat') && (
+                        <button
+                            onClick={handleJoinConsultation}
+                            className="bg-green-500 text-white px-8 py-2 rounded hover:bg-green-600 transition"
+                        >
+                            Join {appointment.mode === 'Video' ? 'Video Call' : 'Chat'}
+                        </button>
+                    )}
                     {appointment.status !== 'Cancelled' && (
                         <button
                             onClick={() => setShowCancelForm(!showCancelForm)}

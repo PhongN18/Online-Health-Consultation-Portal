@@ -182,6 +182,21 @@ namespace BackendOHCP.Controllers
             });
         }
 
+        [Authorize(Roles = "doctor,patient,admin")]
+        [HttpPut("{id}/complete")]
+        public IActionResult MarkAppointmentCompleted(int id)
+        {
+            var appt = _context.Appointments.Find(id);
+            if (appt == null)
+                return NotFound(new { message = "Appointment not found." });
+
+            appt.Status = "Completed";
+            _context.SaveChanges();
+
+            return Ok(new { message = "Appointment marked as completed." });
+        }
+
+
         // 3. Bệnh nhân/doctor reschedule (đổi lịch)
         // PUT: api/Appointments/{id}
         [Authorize(Roles = "patient,doctor,admin")]
@@ -245,6 +260,8 @@ namespace BackendOHCP.Controllers
         {
             var appt = _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Include(a => a.Doctor.DoctorProfile)
                 .Where(a => a.AppointmentId == id)
                 .Select(a => new
                 {
@@ -261,6 +278,17 @@ namespace BackendOHCP.Controllers
                         a.Patient.Email,
                         a.Patient.Gender,
                         a.Patient.DateOfBirth
+                    },
+                    Doctor = new
+                    {
+                        a.Doctor.UserId,
+                        FullName = a.Doctor.FirstName + " " + a.Doctor.LastName,
+                        a.Doctor.Email,
+                        a.Doctor.Gender,
+                        a.Doctor.DoctorProfile.Specialization,
+                        a.Doctor.DoctorProfile.Qualification,
+                        a.Doctor.DoctorProfile.ExperienceYears,
+                        a.Doctor.DoctorProfile.Rating
                     }
                 })
                 .FirstOrDefault();
@@ -269,39 +297,6 @@ namespace BackendOHCP.Controllers
                 return NotFound(new { message = "Appointment not found." });
 
             return Ok(appt);
-        }
-        
-        [HttpGet("{id}")]
-        public IActionResult GetAppointment(int id)
-        {
-            var appointment = _context.Appointments
-                .Include(a => a.Doctor)
-                .Include(a => a.Patient)         // include thêm Patient
-                .FirstOrDefault(a => a.AppointmentId == id);
-
-            if (appointment == null)
-                return NotFound();
-
-            return Ok(new {
-                appointment.AppointmentId,
-                appointment.Mode,
-                appointment.PatientId,
-                appointment.DoctorId,
-                Doctor = appointment.Doctor == null
-                    ? null
-                    : new {
-                        appointment.Doctor.UserId,
-                        appointment.Doctor.FirstName,
-                        appointment.Doctor.LastName
-                    },
-                Patient = appointment.Patient == null
-                    ? null
-                    : new {
-                        appointment.Patient.UserId,
-                        appointment.Patient.FirstName,
-                        appointment.Patient.LastName
-                    }
-            });
         }
 
     }

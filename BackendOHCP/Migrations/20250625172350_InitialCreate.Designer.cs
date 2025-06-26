@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendOHCP.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250623053959_AddAppointmentCancelOption")]
-    partial class AddAppointmentCancelOption
+    [Migration("20250625172350_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -37,7 +37,6 @@ namespace BackendOHCP.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("CancelReason")
-                        .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("CareOption")
@@ -218,6 +217,9 @@ namespace BackendOHCP.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("MessageId"));
 
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("longtext");
@@ -235,6 +237,8 @@ namespace BackendOHCP.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("MessageId");
+
+                    b.HasIndex("AppointmentId");
 
                     b.HasIndex("ReceiverId");
 
@@ -400,6 +404,12 @@ namespace BackendOHCP.Migrations
 
             modelBuilder.Entity("Message", b =>
                 {
+                    b.HasOne("Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("User", "Receiver")
                         .WithMany()
                         .HasForeignKey("ReceiverId")
@@ -411,6 +421,8 @@ namespace BackendOHCP.Migrations
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Appointment");
 
                     b.Navigation("Receiver");
 
