@@ -22,6 +22,13 @@ namespace BackendOHCP.Data
     {
       base.OnModelCreating(mb);
 
+       // 1-to-1: Appointment ⟷ VideoSession
+      mb.Entity<VideoSession>()
+      .HasOne(vs => vs.Appointment)
+      .WithOne(a => a.VideoSession)
+      .HasForeignKey<VideoSession>(vs => vs.AppointmentId)
+      .OnDelete(DeleteBehavior.Cascade);
+
       // Cấu hình Unique index cho Email
       mb.Entity<User>()
         .HasIndex(u => u.Email)

@@ -25,33 +25,47 @@ namespace BackendOHCP.Controllers
         [HttpPost]
         public IActionResult CreateAppointment([FromBody] AppointmentRequest request)
         {
-            // Kiểm tra nếu doctor và patient hợp lệ
+            // 1. Validate patient & doctor
             if (request.PatientId == 0 || request.DoctorId == 0)
                 return BadRequest(new { message = "Patient and Doctor must be specified." });
 
-            // Kiểm tra nếu thời gian đã được đặt
-            var conflict = _context.Appointments.Any(a =>
+            // 2. Check time slot conflict for doctor
+            bool conflict = _context.Appointments.Any(a =>
                 a.DoctorId == request.DoctorId &&
                 a.AppointmentTime == request.AppointmentTime);
-
             if (conflict)
                 return BadRequest(new { message = "Time slot not available." });
 
-            // Tạo lịch hẹn mới
+            // 3. Create new Appointment
             var newAppointment = new Appointment
             {
-                PatientId = request.PatientId,
-                DoctorId = request.DoctorId,
+                PatientId       = request.PatientId,
+                DoctorId        = request.DoctorId,
                 AppointmentTime = request.AppointmentTime,
-                CareOption = request.CareOption,
-                Mode = "Video",
-                Status = "Scheduled", // Chế độ mặc định là scheduled
-                CreatedAt = DateTime.UtcNow
+                CareOption      = request.CareOption,
+                Mode            = "Video",      // e.g. "Video" or "Chat"
+                Status          = "Scheduled",
+                CreatedAt       = DateTime.UtcNow
             };
 
             _context.Appointments.Add(newAppointment);
-            _context.SaveChanges();
+            _context.SaveChanges();  // cần save để EF gán AppointmentId
 
+            // 4. Nếu là video, tạo luôn VideoSession record
+            if (newAppointment.Mode.Equals("Video", StringComparison.OrdinalIgnoreCase))
+            {
+                var session = new VideoSession
+                {
+                    AppointmentId = newAppointment.AppointmentId,
+                    RoomName      = $"room-{newAppointment.AppointmentId}-{Guid.NewGuid():N}".Substring(0, 16),
+                    StartedAt     = null,
+                    EndedAt       = null
+                };
+                _context.VideoSessions.Add(session);
+                _context.SaveChanges();
+            }
+
+            // 5. Trả về appointment (và bạn có thể include VideoSession nếu muốn)
             return Ok(newAppointment);
         }
 

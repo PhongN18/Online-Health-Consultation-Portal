@@ -81,7 +81,8 @@ function App() {
           <Route path='/provider/login' element={<ProviderLogin />} />
           <Route path='/provider/register' element={<ProviderRegister />} />
           <Route path='/provider/verify' element={<ProviderVerify />} />
-          <Route path="/video-call/:appointmentId" element={<VideoCallPage />} />
+          <Route path="/member/appointment/:appointmentId" element={<VideoCallPage />} />
+           <Route path="/provider/appointment/:appointmentId" element={<VideoCallPage />} />
           <Route path="/chat/:appointmentId" element={<ChatConsultationPage />} />
 
           {/* Protected */}
