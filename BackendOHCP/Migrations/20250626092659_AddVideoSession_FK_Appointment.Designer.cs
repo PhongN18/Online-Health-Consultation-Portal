@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendOHCP.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250609070017_InitialSchema")]
-    partial class InitialSchema
+    [Migration("20250626092659_AddVideoSession_FK_Appointment")]
+    partial class AddVideoSession_FK_Appointment
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -35,6 +35,13 @@ namespace BackendOHCP.Migrations
 
                     b.Property<DateTime>("AppointmentTime")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CancelReason")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("CareOption")
+                        .IsRequired()
+                        .HasColumnType("longtext");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -132,6 +139,44 @@ namespace BackendOHCP.Migrations
                     b.ToTable("MedicalRecords");
                 });
 
+            modelBuilder.Entity("BackendOHCP.Models.Prescription", b =>
+                {
+                    b.Property<int>("PrescriptionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("PrescriptionId"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Medications")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("PatientId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PrescriptionId");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("DoctorId");
+
+                    b.HasIndex("PatientId");
+
+                    b.ToTable("Prescriptions");
+                });
+
             modelBuilder.Entity("DoctorProfile", b =>
                 {
                     b.Property<int>("DoctorProfileId")
@@ -164,6 +209,44 @@ namespace BackendOHCP.Migrations
                     b.ToTable("DoctorProfiles");
                 });
 
+            modelBuilder.Entity("Message", b =>
+                {
+                    b.Property<int>("MessageId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("MessageId"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("ReceiverId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SenderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("MessageId");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("ReceiverId");
+
+                    b.HasIndex("SenderId");
+
+                    b.ToTable("Messages");
+                });
+
             modelBuilder.Entity("User", b =>
                 {
                     b.Property<int>("UserId")
@@ -175,11 +258,17 @@ namespace BackendOHCP.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DateOfBirth")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("varchar(255)");
 
                     b.Property<string>("FirstName")
+                        .HasColumnType("longtext");
+
+                    b.Property<string>("Gender")
                         .HasColumnType("longtext");
 
                     b.Property<string>("LastName")
@@ -199,6 +288,35 @@ namespace BackendOHCP.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("VideoSession", b =>
+                {
+                    b.Property<int>("VideoSessionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("VideoSessionId"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("EndedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("RoomName")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("VideoSessionId");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
+
+                    b.ToTable("VideoSessions");
                 });
 
             modelBuilder.Entity("Appointment", b =>
@@ -249,6 +367,33 @@ namespace BackendOHCP.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("BackendOHCP.Models.Prescription", b =>
+                {
+                    b.HasOne("Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("User", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("User", "Patient")
+                        .WithMany()
+                        .HasForeignKey("PatientId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("Patient");
+                });
+
             modelBuilder.Entity("DoctorProfile", b =>
                 {
                     b.HasOne("User", "User")
@@ -258,6 +403,49 @@ namespace BackendOHCP.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Message", b =>
+                {
+                    b.HasOne("Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "Receiver")
+                        .WithMany()
+                        .HasForeignKey("ReceiverId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("User", "Sender")
+                        .WithMany()
+                        .HasForeignKey("SenderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Receiver");
+
+                    b.Navigation("Sender");
+                });
+
+            modelBuilder.Entity("VideoSession", b =>
+                {
+                    b.HasOne("Appointment", "Appointment")
+                        .WithOne("VideoSession")
+                        .HasForeignKey("VideoSession", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+                });
+
+            modelBuilder.Entity("Appointment", b =>
+                {
+                    b.Navigation("VideoSession");
                 });
 
             modelBuilder.Entity("User", b =>

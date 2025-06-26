@@ -11,4 +11,5 @@ public class Appointment
     public string? CancelReason { get; set; }
     public User Patient { get; set; } = null!;
     public User Doctor { get; set; } = null!;
+    public VideoSession? VideoSession { get; set; }
 }
