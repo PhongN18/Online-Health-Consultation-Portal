@@ -49,7 +49,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         {/* <div onClick={() => handleClickOption('urgent')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -64,7 +64,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div> */}
                         <div onClick={() => handleClickOption('text')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -100,7 +100,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Children Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -115,7 +115,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Men Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -130,7 +130,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Sexual Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -145,7 +145,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Manage Condition')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -160,7 +160,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Wellness, Prevention & Lifestyle')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -175,7 +175,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Travel Medicine')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -190,7 +190,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Senior Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -205,7 +205,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                     </div>
@@ -247,7 +247,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 44$</span>
                             </div>
                         </div>
                     </div>

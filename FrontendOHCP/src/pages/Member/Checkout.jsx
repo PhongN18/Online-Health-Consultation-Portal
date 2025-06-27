@@ -35,7 +35,6 @@ function Checkout() {
                 doctorId: doctor?.userId,
                 appointmentTime: appointmentDate.toISOString(),
                 careOption,
-                notes: 'Created from checkout'
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });

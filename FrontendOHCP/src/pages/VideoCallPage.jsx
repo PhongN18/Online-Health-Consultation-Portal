@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import VideoCall from "../components/VideoCall";
 
 export default function VideoCallPage() {
@@ -35,8 +35,11 @@ export default function VideoCallPage() {
             Đang kết nối phòng video...
           </div>
         ) : (
-          <div className="w-full h-full rounded-3xl overflow-hidden shadow-lg border bg-black">
-            <VideoCall roomName={roomName} />
+          <div className="relative w-full h-full">
+            <Link className="absolute top-[-6%] left-10" to='/'>Back to Home</Link>
+            <div className="w-full h-full rounded-3xl overflow-hidden shadow-lg border bg-black">
+              <VideoCall roomName={roomName} />
+            </div>
           </div>
         )}
       </div>

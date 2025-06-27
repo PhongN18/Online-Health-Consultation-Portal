@@ -3,26 +3,26 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BackendOHCP.Data
 {
-    public class AppDbContext : DbContext
-    {
-        public AppDbContext(DbContextOptions<AppDbContext> opts) : base(opts) { }
+  public class AppDbContext : DbContext
+  {
+    public AppDbContext(DbContextOptions<AppDbContext> opts) : base(opts) { }
 
-        public DbSet<User>           Users           => Set<User>();
-        public DbSet<DoctorProfile>  DoctorProfiles  => Set<DoctorProfile>();
-        public DbSet<Appointment>    Appointments    => Set<Appointment>();
-        public DbSet<MedicalRecord>  MedicalRecords  => Set<MedicalRecord>();
-        public DbSet<AIDiagnostic>   AIDiagnostics   => Set<AIDiagnostic>();
-        public DbSet<Prescription> Prescriptions { get; set; }
-        public DbSet<Message> Messages { get; set; }
+    public DbSet<User> Users => Set<User>();
+    public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+    public DbSet<MedicalRecord> MedicalRecords => Set<MedicalRecord>();
+    public DbSet<AIDiagnostic> AIDiagnostics => Set<AIDiagnostic>();
+    public DbSet<Prescription> Prescriptions { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
-        public DbSet<VideoSession> VideoSessions { get; set; }
+    public DbSet<VideoSession> VideoSessions { get; set; }
 
 
     protected override void OnModelCreating(ModelBuilder mb)
     {
       base.OnModelCreating(mb);
 
-       // 1-to-1: Appointment ⟷ VideoSession
+      // 1-to-1: Appointment ⟷ VideoSession
       mb.Entity<VideoSession>()
       .HasOne(vs => vs.Appointment)
       .WithOne(a => a.VideoSession)
@@ -39,6 +39,14 @@ namespace BackendOHCP.Data
         .HasOne(dp => dp.User)
         .WithOne(u => u.DoctorProfile)
         .HasForeignKey<DoctorProfile>(dp => dp.UserId);
+
+      mb.Entity<DoctorCareOption>()
+        .HasKey(dco => new { dco.DoctorProfileId, dco.CareOption });
+
+      mb.Entity<DoctorCareOption>()
+        .HasOne(dco => dco.DoctorProfile)
+        .WithMany(dp => dp.CareOptions)
+        .HasForeignKey(dco => dco.DoctorProfileId);
 
       // Cấu hình quan hệ giữa Appointment và User (1:N)
       mb.Entity<Appointment>()
@@ -90,5 +98,5 @@ namespace BackendOHCP.Data
         p.HasOne(x => x.Appointment).WithMany().HasForeignKey(x => x.AppointmentId).OnDelete(DeleteBehavior.Restrict);
       });
     }
-    }
+  }
 }

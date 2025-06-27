@@ -39,35 +39,57 @@ namespace BackendOHCP.Controllers
             // 3. Create new Appointment
             var newAppointment = new Appointment
             {
-                PatientId       = request.PatientId,
-                DoctorId        = request.DoctorId,
+                PatientId = request.PatientId,
+                DoctorId = request.DoctorId,
                 AppointmentTime = request.AppointmentTime,
-                CareOption      = request.CareOption,
-                Mode            = "Video",      // e.g. "Video" or "Chat"
-                Status          = "Scheduled",
-                CreatedAt       = DateTime.UtcNow
+                CareOption = request.CareOption,
+                Mode = "Video",
+                Status = "Scheduled",
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Appointments.Add(newAppointment);
-            _context.SaveChanges();  // cần save để EF gán AppointmentId
+            _context.SaveChanges(); // Needed to generate AppointmentId
 
-            // 4. Nếu là video, tạo luôn VideoSession record
+            VideoSession? session = null;
+
+            // 4. If video mode, create associated VideoSession
             if (newAppointment.Mode.Equals("Video", StringComparison.OrdinalIgnoreCase))
             {
-                var session = new VideoSession
+                session = new VideoSession
                 {
                     AppointmentId = newAppointment.AppointmentId,
-                    RoomName      = $"room-{newAppointment.AppointmentId}-{Guid.NewGuid():N}".Substring(0, 16),
-                    StartedAt     = null,
-                    EndedAt       = null
+                    RoomName = $"room-{newAppointment.AppointmentId}-{Guid.NewGuid():N}".Substring(0, 16),
+                    StartedAt = null,
+                    EndedAt = null
                 };
                 _context.VideoSessions.Add(session);
                 _context.SaveChanges();
             }
 
-            // 5. Trả về appointment (và bạn có thể include VideoSession nếu muốn)
-            return Ok(newAppointment);
+            // 5. Return a safe, flattened object to avoid serialization loops
+            var result = new
+            {
+                newAppointment.AppointmentId,
+                newAppointment.AppointmentTime,
+                newAppointment.CareOption,
+                newAppointment.Mode,
+                newAppointment.Status,
+                newAppointment.CreatedAt,
+                newAppointment.PatientId,
+                newAppointment.DoctorId,
+                VideoSession = session == null ? null : new
+                {
+                    session.VideoSessionId,
+                    session.RoomName,
+                    session.StartedAt,
+                    session.EndedAt
+                }
+            };
+
+            return Ok(result);
         }
+
 
         [Authorize(Roles = "patient")]
         [HttpGet("member/{userId}")]

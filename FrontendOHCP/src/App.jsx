@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import MemberHeader from './components/MemberHeader';
 import ProviderHeader from './components/ProviderHeader';
+import ChatConsultationPage from './pages/ChatConsultationPage';
 import Home from './pages/Home';
 import Appointments from './pages/Member/Appointments';
 import Checkout from './pages/Member/Checkout';
@@ -24,7 +25,6 @@ import ProviderLogin from './pages/Provider/ProviderLogin';
 import ProviderRegister from './pages/Provider/ProviderRegister';
 import ProviderVerify from './pages/Provider/ProviderVerify';
 import VideoCallPage from "./pages/VideoCallPage";
-import ChatConsultationPage from './pages/ChatConsultationPage';
 import PrivateRoute from './routes/PrivateRoute';
 
 function App() {
@@ -35,7 +35,7 @@ function App() {
   const authPaths = ['/member/login', '/member/register', '/provider/login', '/provider/register'];
   const verifyPaths = ['/member/getting-started', '/provider/verify']
   const homePaths = ['/']
-  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId']
+  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors']
   const providerPaths = ['/provider/home', '/provider/appointments', '/provider/appointment/:apptId']
 
   const authLayout = authPaths.includes(location.pathname);
@@ -73,16 +73,12 @@ function App() {
       <div id='page-content' className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/doctors" element={<DoctorList />} />
-          <Route path="/doctor/:id" element={<DoctorProfile />} />
           <Route path='/member/login' element={<MemberLogin/>} />
           <Route path='/member/register' element={<MemberRegister/>} />
           <Route path='/member/getting-started' element={<CompleteProfile/>} />
           <Route path='/provider/login' element={<ProviderLogin />} />
           <Route path='/provider/register' element={<ProviderRegister />} />
           <Route path='/provider/verify' element={<ProviderVerify />} />
-          <Route path="/member/appointment/:appointmentId" element={<VideoCallPage />} />
-           <Route path="/provider/appointment/:appointmentId" element={<VideoCallPage />} />
           <Route path="/chat/:appointmentId" element={<ChatConsultationPage />} />
 
           {/* Protected */}
@@ -91,6 +87,12 @@ function App() {
           } />
           <Route path="/member/profile" element={
             <PrivateRoute  requiredRole="member"><MemberProfile /></PrivateRoute>
+          } />
+          <Route path="/member/doctor" element={
+            <PrivateRoute  requiredRole="member"><DoctorList /></PrivateRoute>
+          } />
+          <Route path="/member/doctor/:id" element={
+            <PrivateRoute  requiredRole="member"><DoctorProfile /></PrivateRoute>
           } />
           <Route path="/member/choose-doctor" element={
             <PrivateRoute  requiredRole="member"><ChooseDoctor /></PrivateRoute>
@@ -101,17 +103,29 @@ function App() {
           <Route path="/member/checkout" element={
             <PrivateRoute  requiredRole="member"><Checkout /></PrivateRoute>
           } />
+          <Route path="/member/doctors" element={
+            <PrivateRoute  requiredRole="member"><DoctorList /></PrivateRoute>
+          } />
           <Route path="/member/appointments" element={
             <PrivateRoute  requiredRole="member"><Appointments /></PrivateRoute>
           } />
           <Route path="/member/appointment/:apptId" element={
             <PrivateRoute  requiredRole="member"><MemberAppointmentDetails /></PrivateRoute>
           } />
+          <Route path="/member/appointment/video/:apptId" element={
+            <PrivateRoute  requiredRole="member"><VideoCallPage /></PrivateRoute>
+          } />
+          <Route path="/provider/appointment/video/:apptId" element={
+            <PrivateRoute  requiredRole="provider"><VideoCallPage /></PrivateRoute>
+          } />
           <Route path="/provider/home" element={
             <PrivateRoute  requiredRole="provider"><ProviderHome /></PrivateRoute>
           } />
           <Route path="/provider/appointments" element={
             <PrivateRoute  requiredRole="provider"><ProviderAppointments /></PrivateRoute>
+          } />
+          <Route path="/provider/appointment/:apptId" element={
+            <PrivateRoute  requiredRole="provider"><ProviderAppointmentDetails /></PrivateRoute>
           } />
           <Route path="/provider/appointment/:apptId" element={
             <PrivateRoute  requiredRole="provider"><ProviderAppointmentDetails /></PrivateRoute>

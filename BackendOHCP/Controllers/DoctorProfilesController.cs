@@ -33,6 +33,7 @@ namespace BackendOHCP.Controllers
                     dp.Qualification,
                     dp.ExperienceYears,
                     dp.Rating,
+                    dp.CareOptions,
                     User = dp.User == null ? null : new
                     {
                         dp.User.UserId,
@@ -62,6 +63,7 @@ namespace BackendOHCP.Controllers
                     p.Qualification,
                     p.ExperienceYears,
                     p.Rating,
+                    p.CareOptions,
                     User = new
                     {
                         p.User.UserId,
