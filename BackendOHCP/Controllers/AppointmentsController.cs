@@ -285,7 +285,7 @@ namespace BackendOHCP.Controllers
             return Ok(appt);
         }
         
-        [HttpGet("{id}")]
+        [HttpGet("{id}/details")]
         public IActionResult GetAppointment(int id)
         {
             var appointment = _context.Appointments

@@ -1,3 +1,5 @@
+using BackendOHCP.Models;
+
 public class Appointment
 {
     public int AppointmentId { get; set; }
@@ -12,4 +14,6 @@ public class Appointment
     public User Patient { get; set; } = null!;
     public User Doctor { get; set; } = null!;
     public VideoSession? VideoSession { get; set; }
+    public ICollection<MedicalRecord> MedicalRecords { get; set; }
+        = new List<MedicalRecord>();
 }

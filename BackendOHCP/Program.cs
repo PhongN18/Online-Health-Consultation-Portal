@@ -155,5 +155,5 @@ using (var scope = app.Services.CreateScope())
     var context = services.GetRequiredService<AppDbContext>();
     DbInitializer.Initialize(context);
 }
-
+app.UseSwaggerUI();
 app.Run();

@@ -60,6 +60,7 @@ namespace BackendOHCP.Controllers
             {
                 PatientId = req.PatientId,
                 DoctorId = req.DoctorId,
+                AppointmentId = req.AppointmentId,
                 RecordType = req.RecordType,
                 FilePath = filePath,
                 Description = req.Description,
