@@ -184,13 +184,13 @@ function Home() {
                     <div className='grid grid-cols-2 w-3/4 gap-4 pb-12'>
                         <div className='bg-white px-10 py-4 w-full rounded-3xl flex flex-col justify-center items-center'>
                             <h4 className='font-bold text-xl'>Pay per visit</h4>
-                            <h2 className='font-bold text-[var(--dark-blue)] text-3xl my-3'>899.000VND</h2>
+                            <h2 className='font-bold text-[var(--dark-blue)] text-3xl my-3'>44$</h2>
                             <p className='text-sm'>90 days of texting with your doctor included.</p>
                             <button className='bg-[var(--primary-blue)] text-white font-bold w-full py-2 rounded-full mt-4'>Book a visit</button>
                         </div>
                         <div className='bg-white px-10 py-4 w-full rounded-3xl flex flex-col justify-center items-center'>
                             <h4 className='font-bold text-xl'>Become a member</h4>
-                            <h2 className='font-bold text-[var(--dark-blue)] text-3xl my-3'>299.000VND <span className='text-lg'>per visit</span></h2>
+                            <h2 className='font-bold text-[var(--dark-blue)] text-3xl my-3'>24$ <span className='text-lg'>per visit</span></h2>
                             <p className='text-sm'>Unlimited texting with your doctor included.</p>
                             <button className='bg-[var(--primary-blue)] text-white font-bold w-full py-2 rounded-full mt-4'>Book a visit</button>
                         </div>

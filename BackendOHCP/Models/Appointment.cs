@@ -8,7 +8,9 @@ public class Appointment
     public string CareOption { get; set; } = null!;
     public string Status { get; set; } = "Scheduled";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool? CancelApproved { get; set; } // null = pending, true = approved, false = rejected
     public string? CancelReason { get; set; }
+    public DateTime? CancelRequestedAt { get; set; }
     public User Patient { get; set; } = null!;
     public User Doctor { get; set; } = null!;
     public VideoSession? VideoSession { get; set; }

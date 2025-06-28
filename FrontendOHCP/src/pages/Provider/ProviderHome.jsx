@@ -1,12 +1,39 @@
-import { useContext } from 'react';
+import axiosInstance from '@/utils/axios';
+import { useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../../contexts/UserContext';
 
 function ProviderHome() {
     const { user, loading } = useContext(UserContext);
+    const navigate = useNavigate();
 
-    if (loading) {
-        return <div className="p-10 text-center text-gray-500">Loading your dashboard...</div>;
-    }
+    useEffect(() => {
+        const checkDoctorProfile = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await axiosInstance.get('/api/auth/provider/me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+
+                console.log(res)
+                if (!res.data.doctorProfile) {
+                    navigate('/provider/verify', { state: { userId: res.data.userId } });
+                }
+
+                if(!res.data.doctorProfile.verified) {
+                    navigate('/provider/pending')
+                }
+            } catch (err) {
+                console.error("Failed to check doctor profile:", err);
+                // Optionally redirect to login or show error
+            }
+        };
+
+        checkDoctorProfile();
+    }, [navigate]);
+
+    console.log(user);
+    
 
     return (
         <div className="p-10 bg-gray-50 min-h-screen flex justify-center">

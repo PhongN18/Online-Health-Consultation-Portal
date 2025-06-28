@@ -4,6 +4,7 @@ using BackendOHCP.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendOHCP.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250627143327_AddVerifiedField")]
+    partial class AddVerifiedField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -33,14 +36,8 @@ namespace BackendOHCP.Migrations
                     b.Property<DateTime>("AppointmentTime")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<bool?>("CancelApproved")
-                        .HasColumnType("tinyint(1)");
-
                     b.Property<string>("CancelReason")
                         .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("CancelRequestedAt")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("CareOption")
                         .IsRequired()

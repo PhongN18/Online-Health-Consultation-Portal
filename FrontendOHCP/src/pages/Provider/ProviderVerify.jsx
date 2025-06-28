@@ -15,6 +15,11 @@ function ProviderVerify() {
     const [specialization, setSpecialization] = useState('');
     const [qualification, setQualification] = useState('');
     const [experienceYears, setExperienceYears] = useState('');
+    const [selectedCareOptions, setSelectedCareOptions] = useState([]);
+    const allCareOptions = [
+        "PrimaryCare", "WomenHealth", "MenHealth", "ChildrenHealth", "SexualHealth",
+        "ManageCondition", "Wellness", "TravelMedicine", "SeniorHealth", "MentalHealth"
+    ];
     
     useEffect(() => {
         if (!location.state || !location.state.userId) {
@@ -42,11 +47,20 @@ function ProviderVerify() {
                 dateOfBirth: isoDob,
             });
 
+            console.log({
+                userId,
+                specialization,
+                qualification,
+                experienceYears: parseInt(experienceYears),
+                careOptions: selectedCareOptions
+            })
+
             await axiosInstance.post(`/api/DoctorProfiles`, {
                 userId,
                 specialization,
                 qualification,
-                experienceYears: parseInt(experienceYears)
+                experienceYears: parseInt(experienceYears),
+                careOptions: selectedCareOptions
             });
 
             navigate('/provider/home');
@@ -56,6 +70,8 @@ function ProviderVerify() {
         }
     };
 
+    console.log(selectedCareOptions)
+
     return (
         <div className="min-h-screen relative">
             <div className="w-full text-[var(--primary-blue)] font-bold text-4xl h-16 leading-16 absolute flex justify-center border-b-1 border-gray-200">
@@ -63,7 +79,7 @@ function ProviderVerify() {
             </div>
             <div className='w-full min-h-screen bg-cover bg-center py-20 flex justify-center'>
                 <div className='w-full flex justify-center'>
-                    <div className='bg-white rounded-3xl px-12 py-8 w-1/2'>
+                    <div className='bg-white rounded-3xl px-12 py-8 w-3/4'>
                         <h3 className='text-3xl font-bold text-[#343a40]'>Verify your doctor profile</h3>
                         <p className='text-[#343a40] font-semibold mb-10'>Please fill out the details below to complete your application.</p>
                         <form onSubmit={handleCompleteProfile} className='mb-10'>
@@ -78,30 +94,60 @@ function ProviderVerify() {
                                 </div>
                             </div>
 
-                            <div className="mt-4">
-                                <label className="text-[#6f777f]">Date of Birth</label>
-                                <div className='flex gap-2 items-center'>
-                                    <input type="text" placeholder="DD" className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]" required onChange={e => setDobDay(e.target.value)} />
-                                    /
-                                    <input type="text" placeholder="MM" className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]" required onChange={e => setDobMonth(e.target.value)} />
-                                    /
-                                    <input type="text" placeholder="YYYY" className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]" required onChange={e => setDobYear(e.target.value)} />
+                            <div className="mt-4 grid grid-cols-2">
+                                <div className="">
+                                    <label className="text-[#6f777f]">Date of Birth</label>
+                                    <div className='flex gap-2 items-center'>
+                                        <input type="text" placeholder="DD" className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]" required onChange={e => setDobDay(e.target.value)} />
+                                        /
+                                        <input type="text" placeholder="MM" className="bg-[#f1f3f5] w-12 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]" required onChange={e => setDobMonth(e.target.value)} />
+                                        /
+                                        <input type="text" placeholder="YYYY" className="bg-[#f1f3f5] w-16 h-12 mt-2 text-center p-2 rounded shadow-[inset_0_-1px_0_0_#6c747c] focus:outline-none focus:shadow-[inset_0_-2px_0_0_var(--primary-blue)]" required onChange={e => setDobYear(e.target.value)} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-[#6f777f]">Gender</label>
+                                    <div className="grid grid-cols-2 mt-2 gap-4" role="radiogroup">
+                                        {['Female', 'Male'].map(g => (
+                                            <div key={g} role="radio" aria-checked={gender === g}
+                                                onClick={() => setGender(g)}
+                                                className={`text-center font-bold px-6 py-2 rounded-lg cursor-pointer border-1
+                                                ${gender === g
+                                                    ? 'bg-[var(--primary-blue)] text-white border-[var(--primary-blue)]'
+                                                    : 'text-[#6f777f] border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)]'}`}>
+                                                {g}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
+                            
+                            <hr className='mt-8 text-gray-300'/>
 
                             <div className="mt-4">
-                                <label className="text-[#6f777f]">Gender</label>
-                                <div className="grid grid-cols-2 mt-2 gap-4" role="radiogroup">
-                                    {['Female', 'Male'].map(g => (
-                                        <div key={g} role="radio" aria-checked={gender === g}
-                                            onClick={() => setGender(g)}
-                                            className={`text-center font-bold px-6 py-2 rounded-lg cursor-pointer border-1
-                                            ${gender === g
-                                                ? 'bg-[var(--primary-blue)] text-white border-[var(--primary-blue)]'
-                                                : 'text-[#6f777f] border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)]'}`}>
-                                            {g}
-                                        </div>
-                                    ))}
+                                <label className="text-[#6f777f]">Care Options You Provide</label>
+                                <div className="grid grid-cols-5 mt-2 gap-4">
+                                    {allCareOptions.map(option => {
+                                        const isSelected = selectedCareOptions.includes(option);
+                                        return (
+                                            <div
+                                                key={option}
+                                                onClick={() =>
+                                                    setSelectedCareOptions(prev =>
+                                                        isSelected
+                                                            ? prev.filter(o => o !== option)
+                                                            : [...prev, option]
+                                                    )
+                                                }
+                                                className={`text-center font-bold px-6 py-2 rounded-lg cursor-pointer border
+                                                    ${isSelected
+                                                        ? 'bg-[var(--primary-blue)] text-white border-[var(--primary-blue)]'
+                                                        : 'text-[#6f777f] border-[#6f777f] hover:border-[var(--dark-blue)] hover:text-[var(--dark-blue)]'}`}
+                                            >
+                                                {option.replace(/([A-Z])/g, ' $1').trim()}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
 

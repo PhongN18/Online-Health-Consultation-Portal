@@ -8,7 +8,7 @@ namespace BackendOHCP.Models
         public string? Qualification { get; set; }
         public int? ExperienceYears { get; set; }
         public decimal? Rating { get; set; }
-
+        public bool Verified { get; set; } = false; // NEW FIELD
         public User? User { get; set; }
         public ICollection<DoctorCareOption> CareOptions { get; set; } = new List<DoctorCareOption>();
 

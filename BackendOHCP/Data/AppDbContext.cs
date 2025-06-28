@@ -9,6 +9,7 @@ namespace BackendOHCP.Data
 
     public DbSet<User> Users => Set<User>();
     public DbSet<DoctorProfile> DoctorProfiles => Set<DoctorProfile>();
+    public DbSet<DoctorCareOption> DoctorCareOptions { get; set; }
     public DbSet<Appointment> Appointments => Set<Appointment>();
     public DbSet<MedicalRecord> MedicalRecords => Set<MedicalRecord>();
     public DbSet<AIDiagnostic> AIDiagnostics => Set<AIDiagnostic>();

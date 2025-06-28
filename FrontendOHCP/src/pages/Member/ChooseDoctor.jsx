@@ -10,9 +10,20 @@ function ChooseDoctor() {
     const { careOption } = location.state
 
     useEffect(() => {
+
+        const normalizeCareOption = (option) => {
+            if (!option) return null;
+
+            if (option.includes("Wellness")) return "Wellness";
+
+            return option.replace(/[\s,&]+/g, ''); // remove spaces, commas, ampersands
+        };
+
         const fetchDoctors = async () => {
             try {
-                const response = await axiosInstance.get('/api/DoctorProfiles');
+                const response = await axiosInstance.get('/api/DoctorProfiles', {
+                    params: careOption ? { careOption: normalizeCareOption(careOption) } : {}
+                });
                 setDoctors(response.data);
             } catch (err) {
                 console.error('Failed to fetch doctors:', err);
@@ -20,7 +31,8 @@ function ChooseDoctor() {
         };
 
         fetchDoctors();
-    }, []);
+    }, [careOption]);
+
 
     const handleSeeAvailability = (doctorId, userId) => {
         navigate(`/member/schedule-appointment`, { state: { careOption, doctorId, userId }});
@@ -29,7 +41,7 @@ function ChooseDoctor() {
     return (
         <div className="min-h-screen flex flex-col bg-[#f8f9fa] items-center">
             <div className="w-[1000px] py-8">
-                <h3 className="text-[#343a40] text-3xl mb-8 font-semibold">Choose your doctor</h3>
+                <h3 className="text-[#343a40] text-3xl mb-8 font-semibold">Choose your doctor for {careOption}</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {doctors.map((doc) => {
@@ -80,15 +92,9 @@ function ChooseDoctor() {
                                             <i className="fa-solid fa-comment" /> Responsive
                                         </span>
                                     </div>
-
-                                    <div className="bg-gray-100 flex justify-between rounded p-2 text-sm font-semibold my-4">
-                                        <span>Next available</span>
-                                        <span>Jun 20 at 09:30</span>
-                                    </div>
-
                                     <button
                                         onClick={() => handleSeeAvailability(doctorId, userId)}
-                                        className="text-sm bg-[var(--primary-blue)] hover:bg-[var(--primary-dark)] w-full py-2 text-white font-semibold rounded-3xl"
+                                        className="text-sm bg-[var(--primary-blue)] hover:bg-[var(--primary-dark)] my-4 w-full py-2 text-white font-semibold rounded-3xl"
                                     >
                                         See full availability
                                     </button>

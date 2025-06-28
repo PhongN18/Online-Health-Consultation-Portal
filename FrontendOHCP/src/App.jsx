@@ -4,6 +4,10 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import MemberHeader from './components/MemberHeader';
 import ProviderHeader from './components/ProviderHeader';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminLogin from './pages/Admin/AdminLogin';
+import CancellationRequestPage from './pages/Admin/CancellationRequestPage';
+import DoctorVerificationPage from './pages/Admin/DoctorVerificationPage';
 import ChatConsultationPage from './pages/ChatConsultationPage';
 import Home from './pages/Home';
 import Appointments from './pages/Member/Appointments';
@@ -18,6 +22,7 @@ import MemberLogin from './pages/Member/MemberLogin';
 import MemberProfile from './pages/Member/MemberProfile';
 import MemberRegister from './pages/Member/MemberRegister';
 import ScheduleAppointment from './pages/Member/ScheduleAppointment';
+import PendingVerification from './pages/Provider/PendingVerification';
 import ProviderAppointmentDetails from './pages/Provider/ProviderAppointmentDetails';
 import ProviderAppointments from './pages/Provider/ProviderAppointments';
 import ProviderHome from './pages/Provider/ProviderHome';
@@ -35,8 +40,9 @@ function App() {
   const authPaths = ['/member/login', '/member/register', '/provider/login', '/provider/register'];
   const verifyPaths = ['/member/getting-started', '/provider/verify']
   const homePaths = ['/']
-  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors']
-  const providerPaths = ['/provider/home', '/provider/appointments', '/provider/appointment/:apptId']
+  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors', '/member/appointment/video/:apptId']
+  const providerPaths = ['/provider/home', '/provider/appointments', '/provider/appointment/:apptId', '/provider/appointment/video/:apptId']
+  const adminPaths = ['/admin/dashboard', '/admin/verify-doctor', '/admin/approve-request']
 
   const authLayout = authPaths.includes(location.pathname);
   const homeLayout = homePaths.includes(location.pathname);
@@ -49,6 +55,7 @@ function App() {
 
   if (token && (location.pathname === '/' || authPaths.includes(location.pathname))) {
     const role = localStorage.getItem('role');
+    if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
     if (role === 'provider') return <Navigate to="/provider/home" replace />;
     return <Navigate to="/member/home" replace />;
   }
@@ -73,6 +80,7 @@ function App() {
       <div id='page-content' className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path='/admin/login' element={<AdminLogin/>} />
           <Route path='/member/login' element={<MemberLogin/>} />
           <Route path='/member/register' element={<MemberRegister/>} />
           <Route path='/member/getting-started' element={<CompleteProfile/>} />
@@ -82,6 +90,15 @@ function App() {
           <Route path="/chat/:appointmentId" element={<ChatConsultationPage />} />
 
           {/* Protected */}
+          <Route path="/admin/dashboard" element={
+            <PrivateRoute  requiredRole="admin"><AdminDashboard /></PrivateRoute>
+          } />
+          <Route path="/admin/verify-doctor" element={
+            <PrivateRoute  requiredRole="admin"><DoctorVerificationPage /></PrivateRoute>
+          } />
+          <Route path="/admin/approve-request" element={
+            <PrivateRoute  requiredRole="admin"><CancellationRequestPage /></PrivateRoute>
+          } />
           <Route path="/member/home" element={
             <PrivateRoute  requiredRole="member"><MemberHome /></PrivateRoute>
           } />
@@ -121,6 +138,9 @@ function App() {
           <Route path="/provider/home" element={
             <PrivateRoute  requiredRole="provider"><ProviderHome /></PrivateRoute>
           } />
+          <Route path="/provider/pending" element={
+            <PrivateRoute  requiredRole="provider"><PendingVerification /></PrivateRoute>
+          } />
           <Route path="/provider/appointments" element={
             <PrivateRoute  requiredRole="provider"><ProviderAppointments /></PrivateRoute>
           } />
@@ -130,6 +150,20 @@ function App() {
           <Route path="/provider/appointment/:apptId" element={
             <PrivateRoute  requiredRole="provider"><ProviderAppointmentDetails /></PrivateRoute>
           } />
+          <Route
+            path="*"
+            element={
+              (() => {
+                const token = localStorage.getItem('token');
+                const role = localStorage.getItem('role');
+
+                if (!token) return <Navigate to="/" replace />;
+                if (role === 'admin') return <Navigate to="/admin/dashboard" replace />;
+                if (role === 'provider') return <Navigate to="/provider/home" replace />;
+                return <Navigate to="/member/home" replace />;
+              })()
+            }
+          />
         </Routes>
       </div>
       {homeLayout && <Footer />}

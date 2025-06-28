@@ -108,6 +108,9 @@ namespace BackendOHCP.Controllers
                     a.Mode,
                     a.CareOption,
                     a.Status,
+                    a.CancelReason,
+                    a.CancelApproved,
+                    a.CancelRequestedAt,
                     a.CreatedAt,
                     Doctor = new
                     {
@@ -266,22 +269,25 @@ namespace BackendOHCP.Controllers
         }
 
 
-        // 4. Bệnh nhân/doctor/admin hủy lịch
+        // 4. Bệnh nhân/doctor hủy lịch
         // PUT: api/Appointments/{id}/cancel
-        [Authorize(Roles = "patient,doctor,admin")]
+        [Authorize(Roles = "patient,doctor")]
         [HttpPut("{id}/cancel")]
-        public IActionResult CancelAppointment(int id, [FromBody] CancelRequest req)
+        public IActionResult RequestCancelAppointment(int id, [FromBody] CancelRequest req)
         {
             var appointment = _context.Appointments.FirstOrDefault(a => a.AppointmentId == id);
             if (appointment == null)
                 return NotFound(new { message = "Appointment not found." });
 
-            // Update appointment instead of deleting
-            appointment.Status = "Cancelled";
-            appointment.CancelReason = req.Reason ?? "Cancelled by user";
+            if (appointment.Status == "Cancelled")
+                return BadRequest(new { message = "Appointment is already cancelled." });
+
+            appointment.CancelReason = req.Reason;
+            appointment.CancelApproved = null; // pending approval
+            appointment.CancelRequestedAt = DateTime.UtcNow;
             _context.SaveChanges();
 
-            return Ok(new { message = "Appointment status updated to Cancelled." });
+            return Ok(new { message = "Cancellation request submitted and awaiting admin approval." });
         }
 
         // DTO class
@@ -306,6 +312,9 @@ namespace BackendOHCP.Controllers
                     a.Mode,
                     a.CareOption,
                     a.Status,
+                    a.CancelReason,
+                    a.CancelApproved,
+                    a.CancelRequestedAt,
                     a.CreatedAt,
                     Patient = new
                     {

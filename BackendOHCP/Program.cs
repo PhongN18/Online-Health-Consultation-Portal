@@ -6,6 +6,7 @@ using System.Text;
 using System.Security.Claims;
 using BackendOHCP.Data;
 using BackendOHCP.Hubs;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +19,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 );
 
 // === 2. Controllers & Swagger ===
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
