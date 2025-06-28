@@ -48,12 +48,12 @@ function ProviderAppointmentDetail() {
     };
 
     const handleCancelAppointment = async () => {
-        if (!cancelReason.trim()) {
-            alert("Please provide a reason for cancellation.");
-            return;
-        }
+    if (!cancelReason.trim()) {
+        alert("Please provide a reason for cancellation.");
+        return;
+    }
 
-        const confirm = window.confirm("Are you sure you want to cancel this appointment?");
+    const confirm = window.confirm("Submit cancellation request for admin approval?");
         if (!confirm) return;
 
         try {
@@ -66,11 +66,16 @@ function ProviderAppointmentDetail() {
                 }
             });
 
-            alert("Appointment cancelled.");
-            navigate('/provider/appointments');
+            alert("Cancellation request submitted.");
+            setShowCancelForm(false);
+            setAppointment({
+                ...appointment,
+                cancelReason,
+                cancelApproved: null
+            });
         } catch (err) {
             console.error("Cancellation failed:", err);
-            alert("Failed to cancel appointment.");
+            alert("Failed to request cancellation.");
         } finally {
             setCancelling(false);
         }
@@ -90,8 +95,18 @@ function ProviderAppointmentDetail() {
                     <p><span className="font-semibold">Date & Time:</span> {formatDateTime(appointment.appointmentTime)}</p>
                     <p><span className="font-semibold">Mode:</span> {appointment.mode}</p>
                     <p><span className="font-semibold">Care Option:</span> {appointment.careOption}</p>
-                    <p><span className="font-semibold">Status:</span> <span className="capitalize">{appointment.status}</span></p>
                     <p><span className="font-semibold">Created At:</span> {formatDateTime(appointment.createdAt)}</p>
+                    <p>
+                        <span className="font-semibold">Status:</span>{' '}
+                        <span className="capitalize">{appointment.status}</span>
+                        {appointment.cancelApproved === null && appointment.cancelReason && (
+                            <span className="text-orange-600 ml-2">(Cancel request pending)</span>
+                        )}
+                    </p>
+
+                    {appointment.cancelReason && (
+                        <p><span className="font-semibold">Cancel Reason:</span> {appointment.cancelReason}</p>
+                    )}
                 </div>
 
                 <hr className="my-4" />
@@ -112,7 +127,7 @@ function ProviderAppointmentDetail() {
                     >
                         Back to Appointments
                     </Link>
-                    {appointment.status !== 'Cancelled' && (
+                    {appointment.status !== 'Cancelled' && !appointment.cancelReason && (
                         <button
                             onClick={() => setShowCancelForm(!showCancelForm)}
                             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"

@@ -79,6 +79,7 @@ namespace BackendOHCP.Controllers
 
             var user = await _context.Users
                 .Include(u => u.DoctorProfile)
+                    .ThenInclude(dp => dp.CareOptions)
                 .FirstOrDefaultAsync(u => u.Email == email && u.Role == "doctor");
 
             if (user == null)
@@ -100,11 +101,12 @@ namespace BackendOHCP.Controllers
                     user.DoctorProfile.Specialization,
                     user.DoctorProfile.Qualification,
                     user.DoctorProfile.ExperienceYears,
-                    user.DoctorProfile.Rating
+                    user.DoctorProfile.Rating,
+                    user.DoctorProfile.Verified,
+                    careOptions = user.DoctorProfile.CareOptions
+                        .Select(c => c.CareOption.ToString())  // return as string list
                 } : null
             });
         }
     }
-
-
 }

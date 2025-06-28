@@ -1,11 +1,16 @@
-public class DoctorProfile
+namespace BackendOHCP.Models
 {
-    public int    DoctorProfileId { get; set; }
-    public int    UserId          { get; set; }
-    public string Specialization  { get; set; } = null!;
-    public string? Qualification  { get; set; }
-    public int?   ExperienceYears { get; set; }
-    public decimal? Rating        { get; set; }
+    public class DoctorProfile
+    {
+        public int DoctorProfileId { get; set; }
+        public int UserId { get; set; }
+        public string Specialization { get; set; } = null!;
+        public string? Qualification { get; set; }
+        public int? ExperienceYears { get; set; }
+        public decimal? Rating { get; set; }
+        public bool Verified { get; set; } = false; // NEW FIELD
+        public User? User { get; set; }
+        public ICollection<DoctorCareOption> CareOptions { get; set; } = new List<DoctorCareOption>();
 
-    public User? User { get; set; } 
+    }
 }

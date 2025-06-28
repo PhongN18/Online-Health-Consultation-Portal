@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using BackendOHCP.Models;
+using System;
+using System.Linq;
 
 namespace BackendOHCP.Data
 {
@@ -12,8 +14,9 @@ namespace BackendOHCP.Data
             if (context.Users.Any()) return; // Already seeded
 
             var hasher = new PasswordHasher<User>();
+            var rnd = new Random();
 
-            // Sample Users
+            // Seed Admin + Patient
             var admin = new User
             {
                 Email = "admin@ohcp.com",
@@ -36,53 +39,69 @@ namespace BackendOHCP.Data
                 DateOfBirth = new DateTime(1998, 5, 10)
             };
 
-            var doctor1 = new User
-            {
-                Email = "doc1@ohcp.com",
-                Role = "doctor",
-                PasswordHash = hasher.HashPassword(null, "Doctor1@123"),
-                FirstName = "John",
-                LastName = "Nguyen",
-                Gender = "male",
-                DateOfBirth = new DateTime(1985, 7, 20)
-            };
+            context.Users.AddRange(admin, patient);
+            context.SaveChanges();
 
-            var doctor2 = new User
-            {
-                Email = "doc2@ohcp.com",
-                Role = "doctor",
-                PasswordHash = hasher.HashPassword(null, "Doctor2@123"),
-                FirstName = "Linh",
-                LastName = "Tran",
-                Gender = "female",
-                DateOfBirth = new DateTime(1982, 3, 15)
-            };
+            // Generate 50 doctors
+            var careOptions = Enum.GetValues(typeof(CareOptionType)).Cast<CareOptionType>().ToList();
+            var doctorUsers = new List<User>();
+            var doctorProfiles = new List<DoctorProfile>();
+            var doctorCareOptions = new List<DoctorCareOption>();
 
-            context.Users.AddRange(admin, patient, doctor1, doctor2);
-            context.SaveChanges(); // Save to get UserIds
-
-            // Add DoctorProfiles
-            var profiles = new List<DoctorProfile>
+            for (int i = 1; i <= 50; i++)
             {
-                new DoctorProfile
+                var doctor = new User
                 {
-                    UserId = doctor1.UserId,
-                    Specialization = "Cardiology",
-                    Qualification = "MD, PhD",
-                    ExperienceYears = 10,
-                    Rating = 4.7m
-                },
-                new DoctorProfile
+                    Email = $"doctor{i}@ohcp.com",
+                    Role = "doctor",
+                    PasswordHash = hasher.HashPassword(null, $"Doctor{i}@123"),
+                    FirstName = $"Doctor{i}",
+                    LastName = $"Lastname{i}",
+                    Gender = i % 2 == 0 ? "male" : "female",
+                    DateOfBirth = new DateTime(1980 + (i % 20), (i % 12) + 1, (i % 28) + 1),
+                    CreatedAt = DateTime.UtcNow.AddDays(-i)
+                };
+
+                doctorUsers.Add(doctor);
+            }
+
+            context.Users.AddRange(doctorUsers);
+            context.SaveChanges(); // To get UserIds
+
+            foreach (var doctor in doctorUsers)
+            {
+                var profile = new DoctorProfile
                 {
-                    UserId = doctor2.UserId,
-                    Specialization = "Dermatology",
+                    UserId = doctor.UserId,
+                    Specialization = $"Specialty {rnd.Next(1, 10)}",
                     Qualification = "MD",
-                    ExperienceYears = 8,
-                    Rating = 4.9m
-                }
-            };
+                    ExperienceYears = rnd.Next(3, 20),
+                    Rating = Math.Round((decimal)(rnd.NextDouble() * 2 + 3), 1) // Between 3.0 and 5.0
+                };
 
-            context.DoctorProfiles.AddRange(profiles);
+                doctorProfiles.Add(profile);
+            }
+
+            context.DoctorProfiles.AddRange(doctorProfiles);
+            context.SaveChanges(); // Save to get DoctorProfileIds
+
+            // Assign random care options
+            foreach (var profile in doctorProfiles)
+            {
+                var numOptions = rnd.Next(1, 5); // 1 to 4 care options
+                var shuffled = careOptions.OrderBy(_ => rnd.Next()).Take(numOptions).ToList();
+
+                foreach (var option in shuffled)
+                {
+                    doctorCareOptions.Add(new DoctorCareOption
+                    {
+                        DoctorProfileId = profile.DoctorProfileId,
+                        CareOption = option
+                    });
+                }
+            }
+
+            context.DoctorCareOptions.AddRange(doctorCareOptions);
             context.SaveChanges();
         }
     }

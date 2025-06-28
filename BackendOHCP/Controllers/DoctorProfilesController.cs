@@ -13,18 +13,52 @@ namespace BackendOHCP.Controllers
         public DoctorProfilesController(AppDbContext context) => _context = context;
 
         [HttpPost]
-        public IActionResult Create([FromBody] DoctorProfile profile)
+        public IActionResult Create([FromBody] DoctorProfileRequest request)
         {
+            var profile = new DoctorProfile
+            {
+                UserId = request.UserId,
+                Specialization = request.Specialization,
+                Qualification = request.Qualification,
+                ExperienceYears = request.ExperienceYears,
+                CareOptions = request.CareOptions.Select(option => new DoctorCareOption
+                {
+                    CareOption = option
+                }).ToList()
+            };
+
             _context.DoctorProfiles.Add(profile);
             _context.SaveChanges();
-            return Ok(profile);
+
+            return Ok(new
+            {
+                profile.DoctorProfileId,
+                profile.UserId,
+                profile.Specialization,
+                profile.Qualification,
+                profile.ExperienceYears,
+                profile.Rating,
+                profile.Verified,
+                CareOptions = profile.CareOptions.Select(c => c.CareOption.ToString())
+            });
         }
 
+
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] string? careOption)
         {
-            var doctors = await _context.DoctorProfiles
+            var query = _context.DoctorProfiles
                 .Include(dp => dp.User)
+                .Include(dp => dp.CareOptions)
+                .AsQueryable();
+
+            // Optional filtering
+            if (!string.IsNullOrEmpty(careOption) && Enum.TryParse<CareOptionType>(careOption, out var careEnum))
+            {
+                query = query.Where(dp => dp.CareOptions.Any(c => c.CareOption == careEnum));
+            }
+
+            var doctors = await query
                 .Select(dp => new
                 {
                     dp.DoctorProfileId,
@@ -33,6 +67,7 @@ namespace BackendOHCP.Controllers
                     dp.Qualification,
                     dp.ExperienceYears,
                     dp.Rating,
+                    CareOptions = dp.CareOptions.Select(c => c.CareOption.ToString()),
                     User = dp.User == null ? null : new
                     {
                         dp.User.UserId,
@@ -48,6 +83,7 @@ namespace BackendOHCP.Controllers
             return Ok(doctors);
         }
 
+
         [HttpGet("{doctorProfileId}")]
         public async Task<IActionResult> GetByDoctorId(int doctorProfileId)
         {
@@ -62,6 +98,7 @@ namespace BackendOHCP.Controllers
                     p.Qualification,
                     p.ExperienceYears,
                     p.Rating,
+                    p.CareOptions,
                     User = new
                     {
                         p.User.UserId,
@@ -91,6 +128,7 @@ namespace BackendOHCP.Controllers
             profile.Qualification = updated.Qualification;
             profile.ExperienceYears = updated.ExperienceYears;
             profile.Rating = updated.Rating;
+            profile.CareOptions = updated.CareOptions;
 
             _context.SaveChanges();
             return Ok(profile);

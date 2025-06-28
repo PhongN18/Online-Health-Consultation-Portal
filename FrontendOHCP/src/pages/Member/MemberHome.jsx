@@ -1,3 +1,5 @@
+import axiosInstance from '@/utils/axios';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ChildrenHealth from '../../assets/MemberHome/ChildrenHealth.jpg';
 import CustomerService from '../../assets/MemberHome/CustomerService.jpg';
@@ -13,11 +15,34 @@ import Travel from '../../assets/MemberHome/Travel.jpg';
 import Wellness from '../../assets/MemberHome/Wellness.jpg';
 import WomanHealth from '../../assets/MemberHome/WomanHealth.jpg';
 
-
 function MemberHome() {
 
     const navigate = useNavigate();
     
+    useEffect(() => {
+        async function checkUserProfile() {
+            try {
+                const res = await axiosInstance.get("/api/auth/member/me", {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                });
+
+                const { firstName, lastName, gender, dateOfBirth, role } = res.data;
+
+                // Only check for patients/members
+                if (role === "patient" && (!firstName || !lastName || !gender || !dateOfBirth)) {
+                    navigate("/member/getting-started");
+                }
+            } catch (err) {
+                console.error("Failed to check user profile:", err);
+                // optionally navigate to login if auth fails
+            }
+        }
+
+        checkUserProfile();
+    }, [navigate]);
+
     const handleClickOption = (option) => {
         if (option === 'text' || option === 'qna' || option === 'customerService') {
 
@@ -49,7 +74,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         {/* <div onClick={() => handleClickOption('urgent')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -64,7 +89,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div> */}
                         <div onClick={() => handleClickOption('text')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -100,7 +125,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Children Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -115,7 +140,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Men Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -130,7 +155,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Sexual Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -145,7 +170,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Manage Condition')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -160,7 +185,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Wellness, Prevention & Lifestyle')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -175,7 +200,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Travel Medicine')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -190,7 +215,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                         <div onClick={() => handleClickOption('Senior Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
@@ -205,7 +230,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                     </div>
@@ -235,7 +260,7 @@ function MemberHome() {
                     <h3 className="text-[#343a40] text-xl font-semibold">Mental & Behavioral</h3>
                     <p className="text-[#6c747c] mb-4">Talk with our Primary Care doctors about a broad range of issues like sleep, anxiety, or addictive behaviors.</p>
                     <div className="grid grid-cols-2 gap-4">
-                        <div onClick={() => handleClickOption('Mental & Behavioral Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
+                        <div onClick={() => handleClickOption('Mental Health')} className="bg-white shadow-md flex flex-col p-4 rounded-lg hover:scale-105 transition-all duration-200 ease-in-out cursor-pointer">
                             <div className="flex justify-between gap-6">
                                 <div className="rounded overflow-hidden h-20 w-20 flex-shrink-0">
                                     <img src={MentalHealth} alt="" className="h-full w-full" />
@@ -247,7 +272,7 @@ function MemberHome() {
                             </div>
                             <div className="flex justify-between items-center mt-2 text-xs">
                                 <span className='text-[#6c747c]'>Depends on your coverage</span>
-                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>0 - 899.000VND</span>
+                                <span className='block bg-[#018611] text-white font-bold px-2 py-1 rounded-lg'>44$</span>
                             </div>
                         </div>
                     </div>

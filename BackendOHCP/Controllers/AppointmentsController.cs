@@ -39,35 +39,57 @@ namespace BackendOHCP.Controllers
             // 3. Create new Appointment
             var newAppointment = new Appointment
             {
-                PatientId       = request.PatientId,
-                DoctorId        = request.DoctorId,
+                PatientId = request.PatientId,
+                DoctorId = request.DoctorId,
                 AppointmentTime = request.AppointmentTime,
-                CareOption      = request.CareOption,
-                Mode            = "Video",      // e.g. "Video" or "Chat"
-                Status          = "Scheduled",
-                CreatedAt       = DateTime.UtcNow
+                CareOption = request.CareOption,
+                Mode = "Video",
+                Status = "Scheduled",
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Appointments.Add(newAppointment);
-            _context.SaveChanges();  // cần save để EF gán AppointmentId
+            _context.SaveChanges(); // Needed to generate AppointmentId
 
-            // 4. Nếu là video, tạo luôn VideoSession record
+            VideoSession? session = null;
+
+            // 4. If video mode, create associated VideoSession
             if (newAppointment.Mode.Equals("Video", StringComparison.OrdinalIgnoreCase))
             {
-                var session = new VideoSession
+                session = new VideoSession
                 {
                     AppointmentId = newAppointment.AppointmentId,
-                    RoomName      = $"room-{newAppointment.AppointmentId}-{Guid.NewGuid():N}".Substring(0, 16),
-                    StartedAt     = null,
-                    EndedAt       = null
+                    RoomName = $"room-{newAppointment.AppointmentId}-{Guid.NewGuid():N}".Substring(0, 16),
+                    StartedAt = null,
+                    EndedAt = null
                 };
                 _context.VideoSessions.Add(session);
                 _context.SaveChanges();
             }
 
-            // 5. Trả về appointment (và bạn có thể include VideoSession nếu muốn)
-            return Ok(newAppointment);
+            // 5. Return a safe, flattened object to avoid serialization loops
+            var result = new
+            {
+                newAppointment.AppointmentId,
+                newAppointment.AppointmentTime,
+                newAppointment.CareOption,
+                newAppointment.Mode,
+                newAppointment.Status,
+                newAppointment.CreatedAt,
+                newAppointment.PatientId,
+                newAppointment.DoctorId,
+                VideoSession = session == null ? null : new
+                {
+                    session.VideoSessionId,
+                    session.RoomName,
+                    session.StartedAt,
+                    session.EndedAt
+                }
+            };
+
+            return Ok(result);
         }
+
 
         [Authorize(Roles = "patient")]
         [HttpGet("member/{userId}")]
@@ -86,6 +108,9 @@ namespace BackendOHCP.Controllers
                     a.Mode,
                     a.CareOption,
                     a.Status,
+                    a.CancelReason,
+                    a.CancelApproved,
+                    a.CancelRequestedAt,
                     a.CreatedAt,
                     Doctor = new
                     {
@@ -196,6 +221,21 @@ namespace BackendOHCP.Controllers
             });
         }
 
+        [Authorize(Roles = "doctor,patient,admin")]
+        [HttpPut("{id}/complete")]
+        public IActionResult MarkAppointmentCompleted(int id)
+        {
+            var appt = _context.Appointments.Find(id);
+            if (appt == null)
+                return NotFound(new { message = "Appointment not found." });
+
+            appt.Status = "Completed";
+            _context.SaveChanges();
+
+            return Ok(new { message = "Appointment marked as completed." });
+        }
+
+
         // 3. Bệnh nhân/doctor reschedule (đổi lịch)
         // PUT: api/Appointments/{id}
         [Authorize(Roles = "patient,doctor,admin")]
@@ -229,22 +269,25 @@ namespace BackendOHCP.Controllers
         }
 
 
-        // 4. Bệnh nhân/doctor/admin hủy lịch
+        // 4. Bệnh nhân/doctor hủy lịch
         // PUT: api/Appointments/{id}/cancel
-        [Authorize(Roles = "patient,doctor,admin")]
+        [Authorize(Roles = "patient,doctor")]
         [HttpPut("{id}/cancel")]
-        public IActionResult CancelAppointment(int id, [FromBody] CancelRequest req)
+        public IActionResult RequestCancelAppointment(int id, [FromBody] CancelRequest req)
         {
             var appointment = _context.Appointments.FirstOrDefault(a => a.AppointmentId == id);
             if (appointment == null)
                 return NotFound(new { message = "Appointment not found." });
 
-            // Update appointment instead of deleting
-            appointment.Status = "Cancelled";
-            appointment.CancelReason = req.Reason ?? "Cancelled by user";
+            if (appointment.Status == "Cancelled")
+                return BadRequest(new { message = "Appointment is already cancelled." });
+
+            appointment.CancelReason = req.Reason;
+            appointment.CancelApproved = null; // pending approval
+            appointment.CancelRequestedAt = DateTime.UtcNow;
             _context.SaveChanges();
 
-            return Ok(new { message = "Appointment status updated to Cancelled." });
+            return Ok(new { message = "Cancellation request submitted and awaiting admin approval." });
         }
 
         // DTO class
@@ -259,6 +302,8 @@ namespace BackendOHCP.Controllers
         {
             var appt = _context.Appointments
                 .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Include(a => a.Doctor.DoctorProfile)
                 .Where(a => a.AppointmentId == id)
                 .Select(a => new
                 {
@@ -267,6 +312,9 @@ namespace BackendOHCP.Controllers
                     a.Mode,
                     a.CareOption,
                     a.Status,
+                    a.CancelReason,
+                    a.CancelApproved,
+                    a.CancelRequestedAt,
                     a.CreatedAt,
                     Patient = new
                     {
@@ -275,6 +323,17 @@ namespace BackendOHCP.Controllers
                         a.Patient.Email,
                         a.Patient.Gender,
                         a.Patient.DateOfBirth
+                    },
+                    Doctor = new
+                    {
+                        a.Doctor.UserId,
+                        FullName = a.Doctor.FirstName + " " + a.Doctor.LastName,
+                        a.Doctor.Email,
+                        a.Doctor.Gender,
+                        a.Doctor.DoctorProfile.Specialization,
+                        a.Doctor.DoctorProfile.Qualification,
+                        a.Doctor.DoctorProfile.ExperienceYears,
+                        a.Doctor.DoctorProfile.Rating
                     }
                 })
                 .FirstOrDefault();
@@ -284,39 +343,5 @@ namespace BackendOHCP.Controllers
 
             return Ok(appt);
         }
-        
-        [HttpGet("{id}/details")]
-        public IActionResult GetAppointment(int id)
-        {
-            var appointment = _context.Appointments
-                .Include(a => a.Doctor)
-                .Include(a => a.Patient)         // include thêm Patient
-                .FirstOrDefault(a => a.AppointmentId == id);
-
-            if (appointment == null)
-                return NotFound();
-
-            return Ok(new {
-                appointment.AppointmentId,
-                appointment.Mode,
-                appointment.PatientId,
-                appointment.DoctorId,
-                Doctor = appointment.Doctor == null
-                    ? null
-                    : new {
-                        appointment.Doctor.UserId,
-                        appointment.Doctor.FirstName,
-                        appointment.Doctor.LastName
-                    },
-                Patient = appointment.Patient == null
-                    ? null
-                    : new {
-                        appointment.Patient.UserId,
-                        appointment.Patient.FirstName,
-                        appointment.Patient.LastName
-                    }
-            });
-        }
-
     }
 }

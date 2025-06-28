@@ -24,7 +24,7 @@ function MemberHeader({ onLogout }) {
                 </h4>
 
                 <div className='flex items-center gap-8 text-sm font-semibold'>
-                    <Link to='/member/home'>Messages</Link>
+                    <Link to='/member/doctors'>Doctors</Link>
                     <Link to='/member/appointments'>My Appointments</Link>
                     <Link to='/member/home'>Records</Link>
                     <Link to='/member/home'>Notifications</Link>

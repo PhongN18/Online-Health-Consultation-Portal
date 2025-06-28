@@ -31,6 +31,8 @@ export const UserProvider = ({ children }) => {
             return;
         }
 
+        if (role === 'admin') return
+
         const apiPath = role === 'doctor' ? '/api/auth/provider/me' : '/api/auth/member/me';
 
         try {

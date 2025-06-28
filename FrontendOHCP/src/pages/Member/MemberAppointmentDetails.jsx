@@ -48,71 +48,105 @@ function MemberAppointmentDetail() {
     };
 
     const handleCancelAppointment = async () => {
-        if (!cancelReason.trim()) {
-            alert("Please provide a reason for cancellation.");
-            return;
-        }
+    if (!cancelReason.trim()) {
+        alert("Please provide a reason for cancellation.");
+        return;
+    }
 
-        const confirm = window.confirm("Are you sure you want to cancel this appointment?");
+    const confirm = window.confirm("Submit cancellation request for admin approval?");
         if (!confirm) return;
 
         try {
             setCancelling(true);
             await axiosInstance.put(`/api/Appointments/${apptId}/cancel`, {
-                reason: cancelReason
+                reason: `Request by patient: ${cancelReason}`
             }, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
                 }
             });
 
-            alert("Appointment cancelled.");
-            navigate('/provider/appointments');
+            alert("Cancellation request submitted.");
+            setShowCancelForm(false);
+            setAppointment({
+                ...appointment,
+                cancelReason,
+                cancelApproved: null
+            });
         } catch (err) {
             console.error("Cancellation failed:", err);
-            alert("Failed to cancel appointment.");
+            alert("Failed to request cancellation.");
         } finally {
             setCancelling(false);
         }
     };
 
+    const handleJoinConsultation = () => {
+        if (!appointment?.mode || !appointment?.appointmentId) return;
+        const path = appointment.mode === 'Video' ? 'video' : 'chat';
+        navigate(`/member/appointment/${path}/${appointment.appointmentId}`);
+    };
+
     if (loading) return <div className="p-8 text-gray-500">Loading appointment...</div>;
     if (!appointment) return <div className="p-8 text-red-500">Appointment not found.</div>;
 
+    
     return (
         <div className="min-h-screen bg-gray-50 p-10">
+            <div className="max-w-3xl mx-auto mb-4">
+                <Link
+                    to="/member/appointments"
+                    className="text-white bg-[var(--primary-blue)] hover:bg-[var(--dark-blue)] px-4 py-2 rounded-2xl transition"
+                >
+                    Back to Appointments
+                </Link>
+            </div>
             <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
                 <h2 className="text-2xl font-bold text-[var(--primary-blue)] mb-6">
                     Appointment Details
                 </h2>
 
                 <div className="mb-4">
-                    <p><span className="font-semibold">Date & Time:</span> {formatDateTime(appointment.appointmentTime)}</p>
-                    <p><span className="font-semibold">Mode:</span> {appointment.mode}</p>
-                    <p><span className="font-semibold">Care Option:</span> {appointment.careOption}</p>
-                    <p><span className="font-semibold">Status:</span> <span className="capitalize">{appointment.status}</span></p>
-                    <p><span className="font-semibold">Created At:</span> {formatDateTime(appointment.createdAt)}</p>
+                    <p className='pl-2'><span className="font-semibold">Date & Time:</span> {formatDateTime(appointment.appointmentTime)}</p>
+                    <p className='pl-2'><span className="font-semibold">Mode:</span> {appointment.mode}</p>
+                    <p className='pl-2'><span className="font-semibold">Care Option:</span> {appointment.careOption}</p>
+                    <p className='pl-2'><span className="font-semibold">Created At:</span> {formatDateTime(appointment.createdAt)}</p>
+                    <p className='pl-2'>
+                        <span className="font-semibold">Status:</span>{' '}
+                        <span className="capitalize">{appointment.status}</span>
+                        {appointment.cancelApproved === null && appointment.cancelReason && (
+                            <span className="text-orange-600 ml-2">(Cancel request pending)</span>
+                        )}
+                    </p>
+
+                    {appointment.cancelReason && (
+                        <p className='bg-red-200 rounded-2xl p-2 mt-2'><span className="font-semibold">Cancel Reason:</span> {appointment.cancelReason}</p>
+                    )}
                 </div>
 
                 <hr className="my-4" />
-
                 <div>
-                    <h3 className="text-xl font-semibold mb-2 text-gray-700">Patient Information</h3>
-                    <p><span className="font-semibold">Name:</span> {appointment.patient?.fullName}</p>
-                    <p><span className="font-semibold">Email:</span> {appointment.patient?.email}</p>
-                    <p><span className="font-semibold">Gender:</span> {appointment.patient?.gender}</p>
-                    <p><span className="font-semibold">Age:</span> {getAge(appointment.patient?.dateOfBirth)}</p>
-                    <p><span className="font-semibold">Date of Birth:</span> {new Date(appointment.patient?.dateOfBirth).toLocaleDateString('en-GB')}</p>
+                    <h3 className="text-xl font-semibold mb-2 text-gray-700">Doctor Information</h3>
+                    <p className='pl-2'><span className="font-semibold">Name:</span> {appointment.doctor?.fullName}</p>
+                    <p className='pl-2'><span className="font-semibold">Email:</span> {appointment.doctor?.email}</p>
+                    <p className='pl-2'><span className="font-semibold">Gender:</span> {appointment.doctor?.gender}</p>
+                    <p className='pl-2'><span className="font-semibold">Specialization:</span> {appointment.doctor?.specialization || "N/A"}</p>
+                    <p className='pl-2'><span className="font-semibold">Qualification:</span> {appointment.doctor?.qualification || "N/A"}</p>
+                    <p className='pl-2'><span className="font-semibold">Experience:</span> {appointment.doctor?.experienceYears} years</p>
+                    <p className='pl-2'><span className="font-semibold">Rating:</span> {appointment.doctor?.rating?.toFixed(1) ?? "N/A"}</p>
                 </div>
 
+
                 <div className="mt-8 flex justify-between">
-                    <Link
-                        to="/provider/appointments"
-                        className="bg-[var(--primary-blue)] text-white px-4 py-2 rounded hover:bg-[var(--dark-blue)] transition"
-                    >
-                        Back to Appointments
-                    </Link>
-                    {appointment.status !== 'Cancelled' && (
+                    {appointment.status === 'Scheduled' && (appointment.mode === 'Video' || appointment.mode === 'Chat') && (
+                        <button
+                            onClick={handleJoinConsultation}
+                            className="bg-green-500 text-white px-8 py-2 rounded hover:bg-green-600 transition"
+                        >
+                            Join {appointment.mode === 'Video' ? 'Video Call' : 'Chat'}
+                        </button>
+                    )}
+                    {appointment.status !== 'Cancelled' && !appointment.cancelReason && (
                         <button
                             onClick={() => setShowCancelForm(!showCancelForm)}
                             className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
