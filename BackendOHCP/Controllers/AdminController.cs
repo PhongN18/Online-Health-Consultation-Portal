@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace BackendOHCP.Controllers
 {
@@ -419,6 +420,46 @@ namespace BackendOHCP.Controllers
         }
 
 
+        [HttpGet("appointments/stats")]
+        public async Task<IActionResult> GetAppointmentStats()
+        {
+            // Step 1: Group and count by year-month
+            var monthlyAppointments = await _context.Appointments
+                .GroupBy(a => new { a.AppointmentTime.Year, a.AppointmentTime.Month })
+                .Select(g => new
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Year).ThenBy(x => x.Month)
+                .ToListAsync(); // Await async call
+
+            // Step 2: Format the month string in memory
+            var byMonth = monthlyAppointments
+                .Select(x => new
+                {
+                    Month = $"{x.Year}-{x.Month:D2}",
+                    Count = x.Count
+                })
+                .ToList();
+
+            // Step 3: Group and count by care option
+            var groupedByCareOption = await _context.Appointments
+                .GroupBy(a => a.CareOption)
+                .Select(g => new
+                {
+                    CareOption = g.Key,
+                    Count = g.Count()
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                appointmentsOverTime = byMonth,
+                appointmentsByCareOption = groupedByCareOption
+            });
+        }
     }
 
     public class LoginRequest

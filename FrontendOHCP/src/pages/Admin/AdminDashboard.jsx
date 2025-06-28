@@ -1,3 +1,4 @@
+import AdminDashboardCharts from '@/components/AdminDashboardCharts';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,6 +71,8 @@ const AdminDashboard = () => {
         navigate('/');
     };
 
+    console.log(summary)
+
     return (
         <div className="min-h-screen px-8 py-6 bg-gray-50 flex justify-center">
             <div className="w-[1200px]">
@@ -84,17 +87,17 @@ const AdminDashboard = () => {
                         <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
                         <p className="text-3xl text-[var(--primary-blue)]">{summary?.totalUsers ?? '...'}</p>
                     </div>
-                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-5%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/patients')}>
+                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-4%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/patients')}>
                         <h2 className="text-lg font-semibold text-gray-700 group-hover:text-white">Total Patients</h2>
                         <p className="text-3xl text-sky-600 group-hover:text-white">{summary?.totalPatients ?? '...'}</p>
                         <span className='absolute text-white right-4 bottom-[-10%] group-hover:bottom-4 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
-                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-5%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/doctors')}>
+                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-4%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/doctors')}>
                         <h2 className="text-lg font-semibold text-gray-700 group-hover:text-white">Verified Doctors</h2>
                         <p className="text-3xl text-green-600 group-hover:text-white">{summary?.verifiedDoctors ?? '...'}</p>
                         <span className='absolute text-white right-4 bottom-[-10%] group-hover:bottom-4 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
-                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-5%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/verify-doctor')}>
+                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-4%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/verify-doctor')}>
                         <h2 className="text-lg font-semibold text-gray-700 group-hover:text-white">Pending Verifications</h2>
                         <p className="text-3xl text-red-500 group-hover:text-white">{summary?.pendingDoctors ?? '...'}</p>
                         <span className='absolute text-white right-4 bottom-[-10%] group-hover:bottom-4 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
@@ -108,6 +111,9 @@ const AdminDashboard = () => {
                         onClick={() => navigate('/admin/verify-doctor')}
                     >
                         <h2 className="text-lg font-semibold mb-3 text-[var(--primary-blue)]">Doctors Awaiting Verification</h2>
+                        {summary?.pendingDoctors === 0 && (
+                            <p className='text-gray-500'>No pending doctors currently.</p>
+                        )}
                         {pendingDoctors.slice(0, 3).map((doc) => (
                             <p key={doc.doctorProfileId} className="text-sm text-gray-700">
                                 • Dr. {doc.firstName} {doc.lastName} — {doc.specialization}
@@ -125,6 +131,9 @@ const AdminDashboard = () => {
                         onClick={() => navigate('/admin/approve-request')}
                     >
                         <h2 className="text-lg font-semibold mb-3 text-red-600">Pending Cancellation Requests</h2>
+                        {summary?.pendingCancellations === 0 && (
+                            <p className='text-gray-500'>No cancellation requests currently.</p>
+                        )}
                         {summary?.pendingCancellationsPreview?.slice(0, 3).map((appt, i) => (
                             <p key={i} className="text-sm text-gray-700">
                                 • {appt.doctorName} → {new Date(appt.appointmentTime).toLocaleDateString('en-GB')}
@@ -136,6 +145,7 @@ const AdminDashboard = () => {
                         <span className='absolute text-gray-400 right-6 bottom-[-10%] group-hover:bottom-6 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
                 </div>
+                <AdminDashboardCharts />
             </div>
         </div>
     );

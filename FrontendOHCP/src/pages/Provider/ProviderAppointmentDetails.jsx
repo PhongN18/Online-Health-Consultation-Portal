@@ -59,7 +59,7 @@ function ProviderAppointmentDetail() {
         try {
             setCancelling(true);
             await axiosInstance.put(`/api/Appointments/${apptId}/cancel`, {
-                reason: `Request by provider: ${cancelReason}`
+                reason: `Request by doctor: ${cancelReason}`
             }, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem('token')}`
