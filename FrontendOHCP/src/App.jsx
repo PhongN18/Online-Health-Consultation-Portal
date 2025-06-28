@@ -31,6 +31,7 @@ import ProviderRegister from './pages/Provider/ProviderRegister';
 import ProviderVerify from './pages/Provider/ProviderVerify';
 import VideoCallPage from "./pages/VideoCallPage";
 import PrivateRoute from './routes/PrivateRoute';
+import DoctorConsultationRecordPage from "./pages/DoctorConsultationRecordPage"; 
 
 function App() {
 
@@ -144,6 +145,10 @@ function App() {
           <Route path="/provider/appointments" element={
             <PrivateRoute  requiredRole="provider"><ProviderAppointments /></PrivateRoute>
           } />
+          <Route // medical records 
+            path="/provider/appointment/:appointmentId/record" element={
+              <PrivateRoute requiredRole="provider"><DoctorConsultationRecordPage /></PrivateRoute>
+          }/>
           <Route path="/provider/appointment/:apptId" element={
             <PrivateRoute  requiredRole="provider"><ProviderAppointmentDetails /></PrivateRoute>
           } />

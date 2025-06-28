@@ -343,6 +343,5 @@ namespace BackendOHCP.Controllers
 
             return Ok(appt);
         }
-
     }
 }
