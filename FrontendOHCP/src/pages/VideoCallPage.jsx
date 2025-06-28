@@ -7,6 +7,7 @@ export default function VideoCallPage() {
   const { apptId } = useParams();
   const [roomName, setRoomName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState('')
   const context = useContext(UserContext)
 
   console.log(context)
@@ -16,6 +17,7 @@ export default function VideoCallPage() {
       setLoading(true);
       try {
         const token = localStorage.getItem("token");
+        setRole(localStorage.getItem('role'));
         const res = await fetch(`/api/videosession/appointment/${apptId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -40,7 +42,7 @@ export default function VideoCallPage() {
           </div>
         ) : (
           <>
-            <Link className="absolute block top-[-7%] bg-[var(--primary-blue)] hover:bg-[var(--dark-blue)] transition left-0 text-white px-4 py-2 rounded-2xl" to='/'>Back</Link>
+            <Link className="absolute block top-[-7%] bg-[var(--primary-blue)] hover:bg-[var(--dark-blue)] transition left-0 text-white px-4 py-2 rounded-2xl" to={role === 'member' ? `/member/appointment/${apptId}` : `/provider/appointment/${apptId}`}>Back</Link>
             <div className="w-full h-full">
               <div className="w-full h-full rounded-3xl overflow-hidden shadow-lg border bg-black">
                 <VideoCall roomName={roomName} />

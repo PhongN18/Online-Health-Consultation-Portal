@@ -70,13 +70,18 @@ function Appointment() {
                                     </p>
                                     <p className="text-sm text-gray-500">
                                         <i className="fa-regular fa-clock mr-1"></i>
-                                        {new Date(appointment.appointmentTime + "Z")
-                                            .toLocaleString("en-GB", {
-                                                timeZone: "Asia/Ho_Chi_Minh",
-                                                hour12: false,
-                                            })}
+                                        {new Date(appointment.appointmentTime + "Z").toLocaleString("en-GB", {
+                                            timeZone: "Asia/Ho_Chi_Minh",
+                                            weekday: "short",    // This adds 'Mon', 'Tue', etc.
+                                            year: "numeric",
+                                            month: "2-digit",
+                                            day: "2-digit",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                            hour12: false,
+                                        })}
                                     </p>
-                                    <div className="text-sm mt-1 flex gap-3 text-gray-600">
+                                    <div className="text-sm mt-1 flex gap-3 text-gray-600 items-center">
                                         <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded">
                                             {appointment.mode}
                                         </span>
@@ -87,6 +92,9 @@ function Appointment() {
                                         }`}>
                                             {appointment.status}
                                         </span>
+                                        {appointment.cancelReason && appointment.cancelApproved == undefined && (
+                                            <span className="text-red-500">Cancel request pending...</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

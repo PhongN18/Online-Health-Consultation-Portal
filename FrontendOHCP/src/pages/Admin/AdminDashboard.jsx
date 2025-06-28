@@ -84,24 +84,27 @@ const AdminDashboard = () => {
                         <h2 className="text-lg font-semibold text-gray-700">Total Users</h2>
                         <p className="text-3xl text-[var(--primary-blue)]">{summary?.totalUsers ?? '...'}</p>
                     </div>
-                    <div className="p-4 bg-white shadow rounded-lg">
-                        <h2 className="text-lg font-semibold text-gray-700">Total Patients</h2>
-                        <p className="text-3xl text-sky-600">{summary?.totalPatients ?? '...'}</p>
+                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-5%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/patients')}>
+                        <h2 className="text-lg font-semibold text-gray-700 group-hover:text-white">Total Patients</h2>
+                        <p className="text-3xl text-sky-600 group-hover:text-white">{summary?.totalPatients ?? '...'}</p>
+                        <span className='absolute text-white right-4 bottom-[-10%] group-hover:bottom-4 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
-                    <div className="p-4 bg-white shadow rounded-lg">
-                        <h2 className="text-lg font-semibold text-gray-700">Verified Doctors</h2>
-                        <p className="text-3xl text-green-600">{summary?.verifiedDoctors ?? '...'}</p>
+                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-5%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/doctors')}>
+                        <h2 className="text-lg font-semibold text-gray-700 group-hover:text-white">Verified Doctors</h2>
+                        <p className="text-3xl text-green-600 group-hover:text-white">{summary?.verifiedDoctors ?? '...'}</p>
+                        <span className='absolute text-white right-4 bottom-[-10%] group-hover:bottom-4 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
-                    <div className="p-4 bg-white shadow rounded-lg">
-                        <h2 className="text-lg font-semibold text-gray-700">Pending Verifications</h2>
-                        <p className="text-3xl text-red-500">{summary?.pendingDoctors ?? '...'}</p>
+                    <div className="relative overflow-hidden p-4 bg-white shadow rounded-lg cursor-pointer hover:translate-y-[-5%] transition hover:bg-[var(--primary-blue)] group" onClick={() => navigate('/admin/verify-doctor')}>
+                        <h2 className="text-lg font-semibold text-gray-700 group-hover:text-white">Pending Verifications</h2>
+                        <p className="text-3xl text-red-500 group-hover:text-white">{summary?.pendingDoctors ?? '...'}</p>
+                        <span className='absolute text-white right-4 bottom-[-10%] group-hover:bottom-4 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     {/* Doctors Awaiting Verification (Preview Box) */}
                     <div
-                        className="bg-white p-6 shadow rounded-lg cursor-pointer hover:shadow-md transition"
+                        className="relative bg-white overflow-hidden p-6 relative shadow rounded-lg cursor-pointer hover:shadow-md transition group"
                         onClick={() => navigate('/admin/verify-doctor')}
                     >
                         <h2 className="text-lg font-semibold mb-3 text-[var(--primary-blue)]">Doctors Awaiting Verification</h2>
@@ -113,11 +116,12 @@ const AdminDashboard = () => {
                         {pendingDoctors.length > 3 && (
                             <p className="text-sm mt-2 text-gray-500 italic">+ {pendingDoctors.length - 3} more</p>
                         )}
+                        <span className='absolute text-gray-400 right-6 bottom-[-10%] group-hover:bottom-6 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
 
                     {/* Pending Cancellation Requests (Preview Box) */}
                     <div
-                        className="bg-white p-6 shadow rounded-lg cursor-pointer hover:shadow-md transition"
+                        className="relative bg-white overflow-hidden p-6 shadow rounded-lg cursor-pointer hover:shadow-md transition group"
                         onClick={() => navigate('/admin/approve-request')}
                     >
                         <h2 className="text-lg font-semibold mb-3 text-red-600">Pending Cancellation Requests</h2>
@@ -129,124 +133,9 @@ const AdminDashboard = () => {
                         {summary?.pendingCancellations > 3 && (
                             <p className="text-sm mt-2 text-gray-500 italic">+ {summary.pendingCancellations - 3} more</p>
                         )}
+                        <span className='absolute text-gray-400 right-6 bottom-[-10%] group-hover:bottom-6 transition-all ease-in-out'>View details <i className="fa-solid fa-angles-right"></i></span>
                     </div>
                 </div>
-
-
-                {/* Pending Doctors Table */}
-                <div className="bg-white p-6 shadow rounded-lg">
-                    <h2 className="text-xl font-semibold mb-4">Doctors Awaiting Verification</h2>
-                    {pendingDoctors.length === 0 ? (
-                        <p className="text-gray-500">No doctors pending verification.</p>
-                    ) : (
-                        <table className="w-full text-left border-t border-gray-200">
-                            <thead className="bg-gray-100">
-                                <tr>
-                                    <th className="p-2">Name</th>
-                                    <th className="p-2">Specialization</th>
-                                    <th className="p-2">Qualification</th>
-                                    <th className="p-2">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pendingDoctors.map(doctor => (
-                                    <tr key={doctor.doctorProfileId} className="border-b">
-                                        <td className="p-2">{doctor.firstName} {doctor.lastName}</td>
-                                        <td className="p-2">{doctor.specialization}</td>
-                                        <td className="p-2">{doctor.qualification || 'N/A'}</td>
-                                        <td className="p-2 flex gap-2 flex-wrap">
-                                            {/* View Details */}
-                                            <button
-                                                className="bg-gray-200 px-4 py-1.5 rounded-xl text-sm"
-                                                onClick={() => setSelectedDoctor(doctor)}
-                                            >
-                                                View
-                                            </button>
-
-                                            {/* Verify */}
-                                            <button
-                                                className="bg-[var(--primary-blue)] px-4 py-1.5 rounded-xl text-white text-sm"
-                                                onClick={() => setModal({ type: 'verify', doctor })}
-                                            >
-                                                Verify
-                                            </button>
-
-                                            {/* Reject */}
-                                            <button
-                                                className="bg-red-500 px-4 py-1.5 rounded-xl text-white text-sm"
-                                                onClick={() => setModal({ type: 'reject', doctor })}
-                                            >
-                                                Reject
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
-
-                {/* Modal: View Doctor Details */}
-                {selectedDoctor && (
-                    <div className="fixed inset-0 bg-[#00000090] flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-xl w-full max-w-lg shadow-xl">
-                            <h2 className="text-xl font-semibold mb-4">Doctor Details</h2>
-                            <p><strong>Name:</strong> {selectedDoctor.firstName} {selectedDoctor.lastName}</p>
-                            <p><strong>Specialization:</strong> {selectedDoctor.specialization}</p>
-                            <p><strong>Qualification:</strong> {selectedDoctor.qualification || 'N/A'}</p>
-                            <p><strong>Experience:</strong> {selectedDoctor.experienceYears || 'N/A'} years</p>
-                            <p className="font-semibold">Care Options:</p>
-                            <ul className="list-disc list-inside text-gray-700 mt-1">
-                                {selectedDoctor.careOptions.map((option, index) => (
-                                    <li key={index}>
-                                        {option.replace(/([a-z])([A-Z])/g, '$1 $2')}
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="text-right mt-4">
-                                <button
-                                    className="px-4 py-2 text-sm text-white bg-gray-600 rounded-md"
-                                    onClick={() => setSelectedDoctor(null)}
-                                >
-                                    Close
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Modal: Confirm Verify/Reject */}
-                {modal.doctor && (
-                    <div className="fixed inset-0 bg-[#00000090] flex items-center justify-center z-50">
-                        <div className="bg-white p-6 rounded-xl w-full max-w-md shadow-xl">
-                            <h2 className="text-lg font-semibold mb-4">
-                                Confirm {modal.type === 'verify' ? 'Verification' : 'Rejection'}
-                            </h2>
-                            <p>Are you sure you want to {modal.type} Dr. {modal.doctor.firstName} {modal.doctor.lastName}?</p>
-                            <div className="flex justify-end gap-2 mt-6">
-                                <button
-                                    className="px-4 py-2 text-sm rounded-md bg-gray-300"
-                                    onClick={() => setModal({ type: null, doctor: null })}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    className={`px-4 py-2 text-sm text-white rounded-md ${modal.type === 'verify' ? 'bg-green-600' : 'bg-red-600'}`}
-                                    onClick={() => {
-                                        if (modal.type === 'verify') {
-                                            handleVerify(modal.doctor.doctorProfileId);
-                                        } else {
-                                            handleReject(modal.doctor.doctorProfileId);
-                                        }
-                                        setModal({ type: null, doctor: null });
-                                    }}
-                                >
-                                    {modal.type === 'verify' ? 'Confirm Verify' : 'Confirm Reject'}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

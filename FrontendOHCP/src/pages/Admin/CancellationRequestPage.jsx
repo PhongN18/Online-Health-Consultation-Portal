@@ -35,8 +35,8 @@ function CancellationRequestPage() {
     );
 
     return (
-        <div className="p-8 bg-gray-50 min-h-screen">
-            <div className="max-w-[1200px]">
+        <div className="p-8 bg-gray-50 min-h-screen flex justify-center">
+            <div className="w-[1200px]">
                 <div className="flex justify-between my-8">
                     <h3 className="text-3xl font-bold text-[var(--primary-blue)]">Pending Cancellation Requests</h3>
                     <Link to='/admin/dashboard' className='px-4 py-2 border-1 rounded-xl hover:bg-[var(--primary-blue)] hover:border-[var(--primary-blue)] hover:text-white cursor-pointer font-semibold'>Back to Dashboard</Link>

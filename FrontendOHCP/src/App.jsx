@@ -7,8 +7,11 @@ import ProviderHeader from './components/ProviderHeader';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminLogin from './pages/Admin/AdminLogin';
 import CancellationRequestPage from './pages/Admin/CancellationRequestPage';
+import DoctorManagement from './pages/Admin/DoctorManagement';
 import DoctorVerificationPage from './pages/Admin/DoctorVerificationPage';
+import PatientManagement from './pages/Admin/PatientManagement';
 import ChatConsultationPage from './pages/ChatConsultationPage';
+import DoctorConsultationRecordPage from "./pages/DoctorConsultationRecordPage";
 import Home from './pages/Home';
 import Appointments from './pages/Member/Appointments';
 import Checkout from './pages/Member/Checkout';
@@ -31,7 +34,6 @@ import ProviderRegister from './pages/Provider/ProviderRegister';
 import ProviderVerify from './pages/Provider/ProviderVerify';
 import VideoCallPage from "./pages/VideoCallPage";
 import PrivateRoute from './routes/PrivateRoute';
-import DoctorConsultationRecordPage from "./pages/DoctorConsultationRecordPage"; 
 
 function App() {
 
@@ -41,9 +43,9 @@ function App() {
   const authPaths = ['/member/login', '/member/register', '/provider/login', '/provider/register'];
   const verifyPaths = ['/member/getting-started', '/provider/verify']
   const homePaths = ['/']
-  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors', '/member/appointment/video/:apptId']
+  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors', '/member/appointment/video/:apptId', '/member/doctor-profile/:id']
   const providerPaths = ['/provider/home', '/provider/appointments', '/provider/appointment/:apptId', '/provider/appointment/video/:apptId']
-  const adminPaths = ['/admin/dashboard', '/admin/verify-doctor', '/admin/approve-request']
+  const adminPaths = ['/admin/dashboard', '/admin/verify-doctor', '/admin/approve-request', '/admin/patients', '/admin/doctors']
 
   const authLayout = authPaths.includes(location.pathname);
   const homeLayout = homePaths.includes(location.pathname);
@@ -100,6 +102,12 @@ function App() {
           <Route path="/admin/approve-request" element={
             <PrivateRoute  requiredRole="admin"><CancellationRequestPage /></PrivateRoute>
           } />
+          <Route path="/admin/patients" element={
+            <PrivateRoute  requiredRole="admin"><PatientManagement /></PrivateRoute>
+          } />
+          <Route path="/admin/doctors" element={
+            <PrivateRoute  requiredRole="admin"><DoctorManagement /></PrivateRoute>
+          } />
           <Route path="/member/home" element={
             <PrivateRoute  requiredRole="member"><MemberHome /></PrivateRoute>
           } />
@@ -109,7 +117,7 @@ function App() {
           <Route path="/member/doctor" element={
             <PrivateRoute  requiredRole="member"><DoctorList /></PrivateRoute>
           } />
-          <Route path="/member/doctor/:id" element={
+          <Route path="/member/doctor-profile/:id" element={
             <PrivateRoute  requiredRole="member"><DoctorProfile /></PrivateRoute>
           } />
           <Route path="/member/choose-doctor" element={

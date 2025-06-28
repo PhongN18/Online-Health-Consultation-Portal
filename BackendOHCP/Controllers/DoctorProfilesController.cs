@@ -50,6 +50,7 @@ namespace BackendOHCP.Controllers
             var query = _context.DoctorProfiles
                 .Include(dp => dp.User)
                 .Include(dp => dp.CareOptions)
+                .Where(dp => dp.Verified) // ✅ Filter only verified doctors
                 .AsQueryable();
 
             // Optional filtering

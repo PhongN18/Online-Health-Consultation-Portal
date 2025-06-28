@@ -174,6 +174,251 @@ namespace BackendOHCP.Controllers
             return Ok(new { message = "Cancellation request rejected and appointment remains scheduled." });
         }
 
+        [HttpGet("patients")]
+        public async Task<IActionResult> GetPatients(
+    [FromQuery] int? userId,
+    [FromQuery] string? email,
+    [FromQuery] string? firstName,
+    [FromQuery] string? lastName,
+    [FromQuery] string? dateOfBirth,
+    [FromQuery] string? age,
+    [FromQuery] string? gender,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+        {
+            var query = _context.Users.Where(u => u.Role == "patient");
+
+            if (userId.HasValue)
+                query = query.Where(u => u.UserId == userId.Value);
+            if (!string.IsNullOrWhiteSpace(email))
+                query = query.Where(u => u.Email.ToLower().Contains(email.ToLower()));
+            if (!string.IsNullOrWhiteSpace(firstName))
+                query = query.Where(u => u.FirstName.ToLower().Contains(firstName.ToLower()));
+            if (!string.IsNullOrWhiteSpace(lastName))
+                query = query.Where(u => u.LastName.ToLower().Contains(lastName.ToLower()));
+            if (!string.IsNullOrWhiteSpace(gender))
+                query = query.Where(u => u.Gender.ToLower() == gender.ToLower());
+            if (!string.IsNullOrWhiteSpace(dateOfBirth) && DateTime.TryParse(dateOfBirth, out var dob))
+                query = query.Where(u => u.DateOfBirth.HasValue && u.DateOfBirth.Value.Date == dob.Date);
+            if (!string.IsNullOrWhiteSpace(age) && int.TryParse(age, out var ageInt))
+            {
+                var today = DateTime.Today;
+                var minDob = today.AddYears(-ageInt - 1).AddDays(1);
+                var maxDob = today.AddYears(-ageInt);
+                query = query.Where(u => u.DateOfBirth >= minDob && u.DateOfBirth <= maxDob);
+            }
+
+            var totalCount = await query.CountAsync();
+            var patients = await query
+                .OrderBy(u => u.LastName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new
+                {
+                    u.UserId,
+                    u.Email,
+                    u.FirstName,
+                    u.LastName,
+                    u.Gender,
+                    u.DateOfBirth
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalCount,
+                page,
+                pageSize,
+                data = patients
+            });
+        }
+
+        // Update a patient by userId
+        [HttpPut("patient/{userId}")]
+        public async Task<IActionResult> UpdatePatient(int userId, [FromBody] UpdatePatientRequest req)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.Role == "patient");
+            if (user == null)
+                return NotFound(new { message = "Patient not found." });
+
+            user.FirstName = req.FirstName?.Trim();
+            user.LastName = req.LastName?.Trim();
+            user.Email = req.Email?.Trim();
+            user.Gender = req.Gender;
+
+            if (!string.IsNullOrEmpty(req.DateOfBirth) && DateTime.TryParse(req.DateOfBirth, out var dob))
+            {
+                user.DateOfBirth = dob;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Patient updated successfully." });
+        }
+
+
+        // Delete a patient by userId
+        [HttpDelete("patient/{userId}")]
+        public async Task<IActionResult> DeletePatient(int userId)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId && u.Role == "patient");
+            if (user == null)
+                return NotFound(new { message = "Patient not found." });
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Patient deleted successfully." });
+        }
+
+        [HttpGet("care-options")]
+        public IActionResult GetCareOptions()
+        {
+            var careOptions = Enum.GetNames(typeof(CareOptionType));
+            return Ok(careOptions);
+        }
+
+        [HttpGet("doctors")]
+        public async Task<IActionResult> GetDoctors(
+    [FromQuery] int? userId,
+    [FromQuery] string? firstName,
+    [FromQuery] string? lastName,
+    [FromQuery] string? email,
+    [FromQuery] string? specialization,
+    [FromQuery] string? dateOfBirth,
+    [FromQuery] string? gender,
+    [FromQuery] string? careOptions,
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 10)
+        {
+            var query = _context.Users
+                .Include(u => u.DoctorProfile)
+                    .ThenInclude(dp => dp.CareOptions)
+                .Where(u => u.Role == "doctor" && u.DoctorProfile.Verified);
+
+            if (userId.HasValue)
+                query = query.Where(u => u.UserId == userId);
+
+            if (!string.IsNullOrWhiteSpace(firstName))
+                query = query.Where(u => u.FirstName.ToLower().Contains(firstName.ToLower()));
+            if (!string.IsNullOrWhiteSpace(lastName))
+                query = query.Where(u => u.LastName.ToLower().Contains(lastName.ToLower()));
+            if (!string.IsNullOrWhiteSpace(email))
+                query = query.Where(u => u.Email.ToLower().Contains(email.ToLower()));
+            if (!string.IsNullOrWhiteSpace(specialization))
+                query = query.Where(u => u.DoctorProfile.Specialization.ToLower().Contains(specialization.ToLower()));
+            if (!string.IsNullOrWhiteSpace(gender))
+                query = query.Where(u => u.Gender.ToLower() == gender.ToLower());
+            if (!string.IsNullOrWhiteSpace(dateOfBirth) && DateTime.TryParse(dateOfBirth, out var dob))
+                query = query.Where(u => u.DateOfBirth.HasValue && u.DateOfBirth.Value.Date == dob.Date);
+
+            // Filter by careOptions if provided
+            if (!string.IsNullOrWhiteSpace(careOptions))
+            {
+                var selectedOptions = careOptions
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                    .Select(opt => Enum.TryParse<CareOptionType>(opt, out var parsed) ? (CareOptionType?)parsed : null)
+                    .Where(opt => opt.HasValue)
+                    .Select(opt => opt.Value)
+                    .ToList();
+
+                foreach (var option in selectedOptions)
+                {
+                    query = query.Where(u =>
+                        u.DoctorProfile.CareOptions.Any(c => c.CareOption == option));
+                }
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var doctors = await query
+                .OrderBy(u => u.LastName)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(u => new
+                {
+                    u.UserId,
+                    u.FirstName,
+                    u.LastName,
+                    u.Email,
+                    u.Gender,
+                    u.DateOfBirth,
+                    Specialization = u.DoctorProfile.Specialization,
+                    CareOptions = u.DoctorProfile.CareOptions.Select(c => c.CareOption.ToString()).ToList()
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                totalCount,
+                page,
+                pageSize,
+                data = doctors
+            });
+        }
+
+        [HttpPut("doctor/{id}")]
+        public async Task<IActionResult> UpdateDoctor(int id, [FromBody] DoctorUpdateDto updatedData)
+        {
+            var user = await _context.Users
+                .Include(u => u.DoctorProfile)
+                    .ThenInclude(dp => dp.CareOptions)
+                .FirstOrDefaultAsync(u => u.UserId == id && u.Role == "doctor");
+
+            if (user == null || user.DoctorProfile == null)
+                return NotFound("Doctor not found");
+
+            // Update user info
+            user.Email = updatedData.Email ?? user.Email;
+            user.FirstName = updatedData.FirstName ?? user.FirstName;
+            user.LastName = updatedData.LastName ?? user.LastName;
+            user.Gender = updatedData.Gender ?? user.Gender;
+            user.DateOfBirth = updatedData.DateOfBirth ?? user.DateOfBirth;
+
+            // Update doctor profile
+            var profile = user.DoctorProfile;
+            profile.Specialization = updatedData.Specialization ?? profile.Specialization;
+            profile.Qualification = updatedData.Qualification ?? profile.Qualification;
+            profile.ExperienceYears = updatedData.ExperienceYears ?? profile.ExperienceYears;
+
+            // Update care options if provided
+            if (updatedData.CareOptions != null)
+            {
+                // Clear existing ones
+                profile.CareOptions.Clear();
+
+                // Add updated ones
+                foreach (var optionStr in updatedData.CareOptions)
+                {
+                    if (Enum.TryParse<CareOptionType>(optionStr, out var option))
+                    {
+                        profile.CareOptions.Add(new DoctorCareOption
+                        {
+                            DoctorProfileId = profile.DoctorProfileId,
+                            CareOption = option
+                        });
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok("Doctor updated successfully");
+        }
+
+        [HttpDelete("doctor/{id}")]
+        public async Task<IActionResult> DeleteDoctor(int id)
+        {
+            var user = await _context.Users
+                .Include(u => u.DoctorProfile)
+                .FirstOrDefaultAsync(u => u.UserId == id && u.Role == "doctor");
+
+            if (user == null)
+                return NotFound("Doctor not found");
+
+            _context.Users.Remove(user); // EF will cascade delete DoctorProfile if configured
+            await _context.SaveChangesAsync();
+            return Ok("Doctor deleted successfully");
+        }
+
+
     }
 
     public class LoginRequest
@@ -181,4 +426,28 @@ namespace BackendOHCP.Controllers
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
     }
+
+    public class UpdatePatientRequest
+    {
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Email { get; set; }
+        public string? Gender { get; set; }
+        public string? DateOfBirth { get; set; }
+    }
+
+    public class DoctorUpdateDto
+    {
+        public string? Email { get; set; }
+        public string? FirstName { get; set; }
+        public string? LastName { get; set; }
+        public string? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+
+        public string? Specialization { get; set; }
+        public string? Qualification { get; set; }
+        public int? ExperienceYears { get; set; }
+        public List<string>? CareOptions { get; set; }
+    }
+
 }

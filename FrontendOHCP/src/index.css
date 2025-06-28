@@ -29,8 +29,6 @@ body {
   min-width: 320px;  /* Chiều rộng tối thiểu cho thiết bị di động */
   min-height: 100vh;  /* Đảm bảo chiều cao của trang đủ để phủ toàn bộ màn hình */
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;  /* Cài đặt font mặc định */
-  background-color: #fafafa;  /* Màu nền sáng cho trang */
-  color: #333;  /* Màu chữ tối để dễ đọc */
 }
 
 /* ======================== Định dạng các tiêu đề ======================== */
@@ -55,56 +53,6 @@ h1 {
   button {
     background-color: #f9f9f9;  /* Màu nền sáng cho button */
   }
-}
-
-/* ======================== Thêm các phong cách cho card ======================== */
-#page-content {
-  width: 100%;  /* Chiếm toàn bộ chiều rộng */
-  max-width: 1200px;  /* Đặt chiều rộng tối đa */
-  margin: 0 auto;  /* Căn giữa trang */
-  padding: 40px;  /* Thêm padding vào trong */
-  background-color: #fff;  /* Màu nền trắng cho card */
-  border-radius: 12px;  /* Góc bo tròn cho card */
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);  /* Bóng đổ nhẹ */
-}
-
-/* ======================== Cải thiện button ======================== */
-button {
-  padding: 12px 20px;  /* Đặt khoảng cách trong button */
-  background-color: var(--primary-blue);  /* Màu nền chính */
-  color: white;  /* Màu chữ trắng */
-  border-radius: 8px;  /* Bo tròn góc button */
-  transition: all 0.3s ease;  /* Hiệu ứng chuyển động mượt mà */
-}
-
-button:hover {
-  background-color: var(--primary-dark);  /* Màu nền khi hover */
-}
-
-button:disabled {
-  background-color: #d6d6d6;  /* Màu nền khi button bị vô hiệu hóa */
-}
-
-/* ======================== Cải thiện input và textarea ======================== */
-input,
-textarea {
-  padding: 12px;  /* Thêm padding để dễ sử dụng */
-  font-size: 16px;  /* Cỡ chữ phù hợp */
-  width: 100%;  /* Chiếm toàn bộ chiều rộng */
-  border-radius: 8px;  /* Bo tròn góc */
-  border: 1px solid #ccc;  /* Đường viền mờ */
-  background-color: #f9f9f9;  /* Màu nền sáng */
-}
-
-input:focus,
-textarea:focus {
-  border-color: var(--primary-blue);  /* Đổi màu viền khi focus */
-  outline: none;  /* Bỏ outline khi focus */
-}
-
-textarea {
-  resize: vertical;  /* Cho phép thay đổi chiều cao */
-  height: 150px;  /* Đặt chiều cao mặc định */
 }
 
 /* ======================== Các Tabs (Tab menu) ======================== */
