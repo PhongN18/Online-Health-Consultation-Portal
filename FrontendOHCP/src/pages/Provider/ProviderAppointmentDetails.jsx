@@ -9,17 +9,28 @@ function ProviderAppointmentDetail() {
     const [showCancelForm, setShowCancelForm] = useState(false);
     const [cancelReason, setCancelReason] = useState('');
     const [cancelling, setCancelling] = useState(false);
+    const [medicalRecords, setMedicalRecords] = useState([]);
+    const [prescriptions, setPrescriptions] = useState([]);
+    const [showAllRecords, setShowAllRecords] = useState(false);
+    const [showAllPrescriptions, setShowAllPrescriptions] = useState(false);
+
     const navigate = useNavigate()
 
     useEffect(() => {
         const fetchAppointment = async () => {
             try {
-                const res = await axiosInstance.get(`/api/Appointments/${apptId}`, {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
+                const token = localStorage.getItem('token');
+                const headers = { Authorization: `Bearer ${token}` };
+
+                const res = await axiosInstance.get(`/api/Appointments/${apptId}`, { headers });
                 setAppointment(res.data);
+                // Fetch medical records
+                const mrRes = await axiosInstance.get(`/api/medicalrecords/by-appointment/${apptId}`, { headers });
+                setMedicalRecords(mrRes.data);
+
+                // Fetch prescriptions
+                const presRes = await axiosInstance.get(`/api/prescriptions/by-appointment/${apptId}`, { headers });
+                setPrescriptions(presRes.data);
             } catch (err) {
                 console.error('Error fetching appointment:', err);
             } finally {
@@ -30,11 +41,13 @@ function ProviderAppointmentDetail() {
         fetchAppointment();
     }, [apptId]);
 
-    const formatDateTime = (iso) => {
-        return new Date(iso).toLocaleString("en-GB", {
-            timeZone: "Asia/Ho_Chi_Minh",
+    const formatDateTime = (isoString) => {
+        const date = new Date(isoString);
+        const utcPlus7 = new Date(date.getTime() + 7 * 60 * 60 * 1000); // add 7 hours
+        return utcPlus7.toLocaleString("en-GB", {
             dateStyle: "full",
-            timeStyle: "short"
+            timeStyle: "short",
+            hour12: false,
         });
     };
 
@@ -172,6 +185,74 @@ function ProviderAppointmentDetail() {
                             {cancelling ? "Cancelling..." : "Confirm Cancel"}
                         </button>
                     </div>
+                )}
+            </div>
+
+            <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow mt-8 relative">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xl font-semibold text-[var(--primary-blue)]">Medical Records</h3>
+                    {medicalRecords.length > 3 && (
+                        <button
+                            className="text-sm text-blue-500 hover:underline"
+                            onClick={() => setShowAllRecords(!showAllRecords)}
+                        >
+                            {showAllRecords ? "Show Less" : "Show More"}
+                        </button>
+                    )}
+                </div>
+
+                {medicalRecords.length === 0 ? (
+                    <p className="pl-2 text-gray-500">No medical records available for this appointment.</p>
+                ) : (
+                    <ul className="list-disc pl-6 space-y-2">
+                        {medicalRecords
+                            .slice(0, showAllRecords ? 10 : 3)
+                            .map((rec) => (
+                                <li key={rec.recordId}>
+                                    <strong>{rec.recordType}</strong> — {rec.description || "No description"} <br />
+                                    <span className="text-sm text-gray-500">
+                                        Created: {formatDateTime(rec.createdAt)}
+                                    </span>
+                                </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+
+            <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow mt-8 relative">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xl font-semibold text-[var(--primary-blue)]">Prescriptions</h3>
+                    {prescriptions.length > 3 && (
+                        <button
+                            className="text-sm text-blue-500 hover:underline"
+                            onClick={() => setShowAllPrescriptions(!showAllPrescriptions)}
+                        >
+                            {showAllPrescriptions ? "Show Less" : "Show More"}
+                        </button>
+                    )}
+                </div>
+
+                {prescriptions.length === 0 ? (
+                    <p className="pl-2 text-gray-500">No prescriptions created for this appointment.</p>
+                ) : (
+                    <ul className="list-disc pl-6 space-y-2">
+                        {prescriptions
+                            .slice(0, showAllPrescriptions ? 10 : 3)
+                            .map((p) => (
+                            <li key={p.prescriptionId}>
+                                <strong>Prescription #{p.prescriptionId}</strong><br />
+                                <span className="text-sm text-gray-600">
+                                Created: {formatDateTime(p.createdAt)}
+                                </span><br />
+                                <span className="text-sm text-gray-500">
+                                Notes: {p.notes || "—"}<br />
+                                Medications: {JSON.parse(p.medications).map((med, i) => (
+                                    <div key={i}>• {med.name} — {med.dosage} ({med.frequency})</div>
+                                ))}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
                 )}
             </div>
         </div>

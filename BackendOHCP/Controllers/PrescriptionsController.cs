@@ -103,5 +103,16 @@ namespace BackendOHCP.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Deleted" });
         }
+
+        [HttpGet("by-appointment/{appointmentId}")]
+        public async Task<IActionResult> GetByAppointment(int appointmentId)
+        {
+            var prescriptions = await _context.Prescriptions
+                .Where(p => p.AppointmentId == appointmentId)
+                .OrderByDescending(p => p.CreatedAt)
+                .ToListAsync();
+
+            return Ok(prescriptions);
+        }
     }
 }

@@ -103,5 +103,16 @@ namespace BackendOHCP.Controllers
             return Ok(records);
         }
 
+        [HttpGet("by-appointment/{appointmentId}")]
+        public async Task<IActionResult> GetByAppointment(int appointmentId)
+        {
+            var records = await _context.MedicalRecords
+                .Where(r => r.AppointmentId == appointmentId)
+                .OrderByDescending(r => r.CreatedAt)
+                .ToListAsync();
+
+            return Ok(records);
+        }
+
     }
 }

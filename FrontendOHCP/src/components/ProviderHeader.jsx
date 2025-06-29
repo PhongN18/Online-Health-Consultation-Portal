@@ -15,7 +15,7 @@ function ProviderHeader({ onLogout }) {
 
                 <nav className="flex gap-6 items-center">
                     <Link to="/provider/home" className="hover:underline">Dashboard</Link>
-                    <Link to="/provider/schedule" className="hover:underline">Schedule</Link>
+                    <Link to="/provider/appointments" className="hover:underline">Schedule</Link>
                     <Link to="/provider/records" className="hover:underline">Records</Link>
                     <div className="border-l border-white h-6 mx-2"></div>
                     <div className="flex items-center gap-2">

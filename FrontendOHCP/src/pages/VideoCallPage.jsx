@@ -11,8 +11,6 @@ export default function VideoCallPage() {
   const [roomName, setRoomName] = useState("");
   const [loading, setLoading] = useState(true);
   const [appointment, setAppointment] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [recordDescription, setRecordDescription] = useState("");
   const role = localStorage.getItem("role");
 
   useEffect(() => {
@@ -46,42 +44,6 @@ export default function VideoCallPage() {
     fetchData();
   }, [apptId]);
 
-  const createMedicalRecord = async (desc) => {
-    if (!appointment) return alert("Appointment not found!");
-    const token = localStorage.getItem("token");
-    console.log(appointment)
-
-    const payload = {
-      AppointmentId: parseInt(apptId),
-      PatientId: appointment.patient.userId,
-      DoctorId: appointment.doctor.userId,
-      RecordType: "visit_summary",
-      Description: desc
-    };
-
-    console.log(payload)
-
-    try {
-      const res = await fetch("/api/medicalrecords", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.ok) {
-        alert("Medical record created successfully!");
-        navigate(`/provider/appointment/${apptId}/record`);
-      } else {
-        const errorData = await res.json();
-        alert(`Failed to create record: ${errorData.message || "Unknown error"}`);
-      }
-    } catch (err) {
-      alert("Network error: " + err.message);
-    }
-  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center pt-16">
       <div className="relative w-[1200px] h-[92vh] rounded-3xl shadow-2xl bg-white flex items-center justify-center border border-gray-100 p-4">
@@ -99,7 +61,10 @@ export default function VideoCallPage() {
             </Link>
 
             {role === "provider" && (
-              <Button onClick={() => setShowModal(true)} className="absolute top-[-7%] right-0 bg-[var(--primary-blue)] text-white px-4 py-2 rounded-2xl hover:bg-[var(--dark-blue)]">
+              <Button
+                onClick={() => navigate(`/provider/appointment/${apptId}/record`)}
+                className="absolute top-[-7%] right-0 bg-[var(--primary-blue)] text-white px-4 py-2 rounded-2xl hover:bg-[var(--dark-blue)]"
+              >
                 Create Medical Record
               </Button>
             )}
@@ -109,32 +74,6 @@ export default function VideoCallPage() {
                 <VideoCall roomName={roomName} />
               </div>
             </div>
-
-            {showModal && (
-              <div className="fixed inset-0 flex items-center justify-center bg-[#00000090] z-50">
-                <div className="bg-white rounded-xl shadow-lg p-6 w-[500px]">
-                  <h3 className="text-lg font-semibold mb-2">Write Visit Summary</h3>
-                  <textarea
-                    rows={5}
-                    className="w-full border rounded p-2"
-                    value={recordDescription}
-                    onChange={(e) => setRecordDescription(e.target.value)}
-                  />
-                  <div className="mt-4 flex justify-end space-x-2">
-                    <Button onClick={() => setShowModal(false)} className="bg-gray-300">Cancel</Button>
-                    <Button
-                      onClick={async () => {
-                        await createMedicalRecord(recordDescription);
-                        setShowModal(false);
-                      }}
-                      className="bg-[var(--primary-blue)] text-white"
-                    >
-                      Submit
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
           </>
         )}
       </div>
