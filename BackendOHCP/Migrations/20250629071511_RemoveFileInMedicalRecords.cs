@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BackendOHCP.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class RemoveFileInMedicalRecords : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -85,8 +85,10 @@ namespace BackendOHCP.Migrations
                     Status = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     CreatedAt = table.Column<DateTime>(type: "datetime(6)", nullable: false),
+                    CancelApproved = table.Column<bool>(type: "tinyint(1)", nullable: true),
                     CancelReason = table.Column<string>(type: "longtext", nullable: true)
-                        .Annotation("MySql:CharSet", "utf8mb4")
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    CancelRequestedAt = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -118,7 +120,8 @@ namespace BackendOHCP.Migrations
                     Qualification = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ExperienceYears = table.Column<int>(type: "int", nullable: true),
-                    Rating = table.Column<decimal>(type: "decimal(65,30)", nullable: true)
+                    Rating = table.Column<decimal>(type: "decimal(65,30)", nullable: true),
+                    Verified = table.Column<bool>(type: "tinyint(1)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -138,11 +141,10 @@ namespace BackendOHCP.Migrations
                 {
                     RecordId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    AppointmentId = table.Column<int>(type: "int", nullable: true),
                     PatientId = table.Column<int>(type: "int", nullable: false),
                     DoctorId = table.Column<int>(type: "int", nullable: true),
                     RecordType = table.Column<string>(type: "longtext", nullable: false)
-                        .Annotation("MySql:CharSet", "utf8mb4"),
-                    FilePath = table.Column<string>(type: "longtext", nullable: false)
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     Description = table.Column<string>(type: "longtext", nullable: true)
                         .Annotation("MySql:CharSet", "utf8mb4"),
@@ -151,6 +153,11 @@ namespace BackendOHCP.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_MedicalRecords", x => x.RecordId);
+                    table.ForeignKey(
+                        name: "FK_MedicalRecords_Appointments_AppointmentId",
+                        column: x => x.AppointmentId,
+                        principalTable: "Appointments",
+                        principalColumn: "AppointmentId");
                     table.ForeignKey(
                         name: "FK_MedicalRecords_Users_DoctorId",
                         column: x => x.DoctorId,
@@ -267,6 +274,25 @@ namespace BackendOHCP.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "DoctorCareOptions",
+                columns: table => new
+                {
+                    DoctorProfileId = table.Column<int>(type: "int", nullable: false),
+                    CareOption = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DoctorCareOptions", x => new { x.DoctorProfileId, x.CareOption });
+                    table.ForeignKey(
+                        name: "FK_DoctorCareOptions_DoctorProfiles_DoctorProfileId",
+                        column: x => x.DoctorProfileId,
+                        principalTable: "DoctorProfiles",
+                        principalColumn: "DoctorProfileId",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AIDiagnostics_PatientId",
                 table: "AIDiagnostics",
@@ -287,6 +313,11 @@ namespace BackendOHCP.Migrations
                 table: "DoctorProfiles",
                 column: "UserId",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MedicalRecords_AppointmentId",
+                table: "MedicalRecords",
+                column: "AppointmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MedicalRecords_DoctorId",
@@ -348,7 +379,7 @@ namespace BackendOHCP.Migrations
                 name: "AIDiagnostics");
 
             migrationBuilder.DropTable(
-                name: "DoctorProfiles");
+                name: "DoctorCareOptions");
 
             migrationBuilder.DropTable(
                 name: "MedicalRecords");
@@ -361,6 +392,9 @@ namespace BackendOHCP.Migrations
 
             migrationBuilder.DropTable(
                 name: "VideoSessions");
+
+            migrationBuilder.DropTable(
+                name: "DoctorProfiles");
 
             migrationBuilder.DropTable(
                 name: "Appointments");

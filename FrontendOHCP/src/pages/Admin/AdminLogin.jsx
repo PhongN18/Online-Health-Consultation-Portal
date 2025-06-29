@@ -74,11 +74,15 @@ function AdminLogin() {
                             </div>
                         </form>
                         <div className='bg-[#eee] h-[1px] w-full my-8'></div>
-                        <p className='font-semibold text-center text-sm text-gray-500'>
-                            This portal is for admin use only.
-                        </p>
+                        <div className='font-semibold text-center text-sm text-gray-500'>
+                            <p className='mb-2'>This portal is for admin use only.</p>
+                        </div>
                     </div>
                 </div>
+            </div>
+            <div className="absolute flex w-full justify-center bottom-10 flex-col items-center gap-2">
+                <Link className='py-2 px-4 rounded-xl bg-white text-[var(--dark-blue)] transition hover:bg-[var(--dark-blue)] hover:text-white font-semibold' to='/provider/login'>Provider Login</Link>
+                <Link className='py-2 px-4 rounded-xl bg-white text-[var(--dark-blue)] transition hover:bg-[var(--dark-blue)] hover:text-white font-semibold' to='/member/login'>Member Login</Link>
             </div>
         </div>
     );

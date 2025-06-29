@@ -12,120 +12,96 @@ namespace BackendOHCP.Controllers
     public class MedicalRecordsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly IWebHostEnvironment _env;
-        public MedicalRecordsController(AppDbContext context, IWebHostEnvironment env)
+
+        public MedicalRecordsController(AppDbContext context)
         {
             _context = context;
-            _env = env;
         }
 
-        // 1. Lấy danh sách bệnh án (theo patientId hoặc doctorId)
-        [Authorize(Roles = "admin,doctor,patient")]
-        [HttpGet]
-        public IActionResult GetRecords([FromQuery] int? patientId, [FromQuery] int? doctorId)
-        {
-            var query = _context.MedicalRecords.AsQueryable();
-
-            if (patientId != null)
-                query = query.Where(r => r.PatientId == patientId);
-            if (doctorId != null)
-                query = query.Where(r => r.DoctorId == doctorId);
-
-            var records = query.OrderByDescending(r => r.CreatedAt).ToList();
-            return Ok(records);
-        }
-
-        // 2. Thêm bệnh án mới (POST - có thể kèm upload file)
-        [Authorize(Roles = "doctor,admin")]
         [HttpPost]
-        [RequestSizeLimit(10_000_000)] // Giới hạn 10MB
-        public async Task<IActionResult> Create([FromForm] MedicalRecordCreateRequest req)
+        public async Task<IActionResult> CreateMedicalRecord([FromBody] MedicalRecordCreateRequest request)
         {
-            string filePath = "";
-            if (req.File != null)
-            {
-                var uploads = Path.Combine(_env.ContentRootPath, "UploadedRecords");
-                if (!Directory.Exists(uploads)) Directory.CreateDirectory(uploads);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-                var fileName = $"{Guid.NewGuid()}_{req.File.FileName}";
-                filePath = Path.Combine("UploadedRecords", fileName);
-                var fullPath = Path.Combine(_env.ContentRootPath, filePath);
-                using (var stream = System.IO.File.Create(fullPath))
-                {
-                    await req.File.CopyToAsync(stream);
-                }
+            // Optional: Validate referenced entities
+            var patient = await _context.Users.FindAsync(request.PatientId);
+            if (patient == null || patient.Role != "patient")
+                return BadRequest("Invalid patient ID");
+
+            if (request.DoctorId.HasValue)
+            {
+                var doctor = await _context.Users.FindAsync(request.DoctorId.Value);
+                if (doctor == null || doctor.Role != "doctor")
+                    return BadRequest("Invalid doctor ID");
+            }
+
+            if (request.AppointmentId.HasValue)
+            {
+                var appointment = await _context.Appointments.FindAsync(request.AppointmentId.Value);
+                if (appointment == null)
+                    return BadRequest("Invalid appointment ID");
             }
 
             var record = new MedicalRecord
             {
-                PatientId = req.PatientId,
-                DoctorId = req.DoctorId,
-                AppointmentId = req.AppointmentId,
-                RecordType = req.RecordType,
-                FilePath = filePath,
-                Description = req.Description,
+                AppointmentId = request.AppointmentId,
+                PatientId = request.PatientId,
+                DoctorId = request.DoctorId,
+                RecordType = request.RecordType,
+                Description = request.Description,
                 CreatedAt = DateTime.UtcNow
             };
 
             _context.MedicalRecords.Add(record);
             await _context.SaveChangesAsync();
 
-            return Ok(record);
+            return Ok(new { message = "Medical record created successfully" });
         }
 
-        // 3. Cập nhật thông tin bệnh án (PUT)
-        [Authorize(Roles = "doctor,admin")]
-        [HttpPut("{id}")]
-        public IActionResult Update(int id, [FromBody] MedicalRecord updated)
+
+        [Authorize(Roles = "patient")]
+        [HttpGet("member/{userId}")]
+        public async Task<IActionResult> GetMedicalRecordsForMember(int userId)
         {
-            var record = _context.MedicalRecords.Find(id);
-            if (record == null) return NotFound();
+            var records = await _context.MedicalRecords
+                .Where(r => r.PatientId == userId)
+                .Include(r => r.Doctor)
+                .OrderByDescending(r => r.CreatedAt)
+                .Select(r => new
+                {
+                    r.RecordId,
+                    r.RecordType,
+                    r.Description,
+                    r.CreatedAt,
+                    DoctorName = r.Doctor != null
+                        ? r.Doctor.FirstName + " " + r.Doctor.LastName
+                        : "Unknown"
+                })
+                .ToListAsync();
 
-            record.RecordType = updated.RecordType;
-            record.Description = updated.Description ?? record.Description;
-            _context.SaveChanges();
-            return Ok(record);
+            return Ok(records);
         }
 
-        // 4. Xoá bệnh án (DELETE)
-        [Authorize(Roles = "admin")]
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [Authorize(Roles = "doctor")]
+        [HttpGet("provider/{doctorId}")]
+        public async Task<IActionResult> GetRecordsByProvider(int doctorId)
         {
-            var record = _context.MedicalRecords.Find(id);
-            if (record == null) return NotFound();
+            var records = await _context.MedicalRecords
+                .Where(m => m.DoctorId == doctorId)
+                .Include(m => m.Patient)
+                .Select(m => new
+                {
+                    m.RecordId,
+                    m.RecordType,
+                    m.Description,
+                    m.CreatedAt,
+                    PatientName = m.Patient.FirstName + " " + m.Patient.LastName
+                })
+                .ToListAsync();
 
-            // Xoá file vật lý nếu có
-            if (!string.IsNullOrEmpty(record.FilePath))
-            {
-                var filePath = Path.Combine(_env.ContentRootPath, record.FilePath);
-                if (System.IO.File.Exists(filePath))
-                    System.IO.File.Delete(filePath);
-            }
-
-            _context.MedicalRecords.Remove(record);
-            _context.SaveChanges();
-            return Ok(new { message = "Deleted" });
+            return Ok(records);
         }
 
-        // 5. Download file bệnh án
-        [Authorize(Roles = "admin,doctor,patient")]
-        [HttpGet("{id}/download")]
-        public IActionResult DownloadFile(int id)
-        {
-            var record = _context.MedicalRecords.Find(id);
-            if (record == null || string.IsNullOrEmpty(record.FilePath))
-                return NotFound(new { message = "File not found" });
-
-            var fullPath = Path.Combine(_env.ContentRootPath, record.FilePath);
-            if (!System.IO.File.Exists(fullPath))
-                return NotFound(new { message = "File not found on server" });
-
-            var contentType = "application/octet-stream";
-            var fileName = Path.GetFileName(record.FilePath);
-            var fileBytes = System.IO.File.ReadAllBytes(fullPath);
-
-            return File(fileBytes, contentType, fileName);
-        }
     }
 }

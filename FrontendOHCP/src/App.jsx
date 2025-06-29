@@ -22,6 +22,7 @@ import DoctorProfile from './pages/Member/DoctorProfile';
 import MemberAppointmentDetails from './pages/Member/MemberAppointmentDetails';
 import MemberHome from './pages/Member/MemberHome';
 import MemberLogin from './pages/Member/MemberLogin';
+import MemberMedicalRecordsPage from './pages/Member/MemberMedicalRecordsPage';
 import MemberProfile from './pages/Member/MemberProfile';
 import MemberRegister from './pages/Member/MemberRegister';
 import ScheduleAppointment from './pages/Member/ScheduleAppointment';
@@ -30,6 +31,7 @@ import ProviderAppointmentDetails from './pages/Provider/ProviderAppointmentDeta
 import ProviderAppointments from './pages/Provider/ProviderAppointments';
 import ProviderHome from './pages/Provider/ProviderHome';
 import ProviderLogin from './pages/Provider/ProviderLogin';
+import ProviderMedicalRecordsPage from './pages/Provider/ProviderMedicalRecordsPage';
 import ProviderRegister from './pages/Provider/ProviderRegister';
 import ProviderVerify from './pages/Provider/ProviderVerify';
 import VideoCallPage from "./pages/VideoCallPage";
@@ -43,8 +45,8 @@ function App() {
   const authPaths = ['/member/login', '/member/register', '/provider/login', '/provider/register'];
   const verifyPaths = ['/member/getting-started', '/provider/verify']
   const homePaths = ['/']
-  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors', '/member/appointment/video/:apptId', '/member/doctor-profile/:id']
-  const providerPaths = ['/provider/home', '/provider/appointments', '/provider/appointment/:apptId', '/provider/appointment/video/:apptId']
+  const memberPaths = ['/member/profile', '/member/home', '/member/choose-doctor', '/member/schedule-appointment', '/member/checkout', '/member/appointments', '/member/appointment/:apptId', '/member/doctors', '/member/appointment/video/:apptId', '/member/doctor-profile/:id', '/member/records']
+  const providerPaths = ['/provider/home', '/provider/appointments', '/provider/appointment/:apptId', '/provider/appointment/video/:apptId', '/provider/records']
   const adminPaths = ['/admin/dashboard', '/admin/verify-doctor', '/admin/approve-request', '/admin/patients', '/admin/doctors']
 
   const authLayout = authPaths.includes(location.pathname);
@@ -140,6 +142,12 @@ function App() {
           } />
           <Route path="/member/appointment/video/:apptId" element={
             <PrivateRoute  requiredRole="member"><VideoCallPage /></PrivateRoute>
+          } />
+          <Route path="/member/records" element={
+            <PrivateRoute  requiredRole="member"><MemberMedicalRecordsPage /></PrivateRoute>
+          } />
+          <Route path="/provider/records" element={
+            <PrivateRoute  requiredRole="provider"><ProviderMedicalRecordsPage /></PrivateRoute>
           } />
           <Route path="/provider/appointment/video/:apptId" element={
             <PrivateRoute  requiredRole="provider"><VideoCallPage /></PrivateRoute>

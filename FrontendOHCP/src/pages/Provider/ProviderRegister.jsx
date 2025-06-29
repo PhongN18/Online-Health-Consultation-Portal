@@ -82,6 +82,10 @@ function ProviderRegister() {
                     </div>
                 </div>
             </div>
+            <div className="absolute flex w-full justify-center bottom-10 flex-col items-center gap-2">
+                <Link className='py-2 px-4 rounded-xl hover:bg-[var(--dark-blue)] border border-[var(--dark-blue)] hover:text-white font-semibold' to='/admin/login'>Admin Login</Link>
+                <Link className='py-2 px-4 rounded-xl hover:bg-[var(--primary-blue)] border border-[var(--primary-blue)] hover:text-white font-semibold' to='/member/login'>Member Login</Link>
+            </div>
         </div>
     );
 }

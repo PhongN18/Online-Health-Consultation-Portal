@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BackendOHCP.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250626112904_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250629071511_RemoveFileInMedicalRecords")]
+    partial class RemoveFileInMedicalRecords
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -36,8 +36,14 @@ namespace BackendOHCP.Migrations
                     b.Property<DateTime>("AppointmentTime")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<bool?>("CancelApproved")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("CancelReason")
                         .HasColumnType("longtext");
+
+                    b.Property<DateTime?>("CancelRequestedAt")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("CareOption")
                         .IsRequired()
@@ -102,6 +108,54 @@ namespace BackendOHCP.Migrations
                     b.ToTable("AIDiagnostics");
                 });
 
+            modelBuilder.Entity("BackendOHCP.Models.DoctorCareOption", b =>
+                {
+                    b.Property<int>("DoctorProfileId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CareOption")
+                        .HasColumnType("int");
+
+                    b.HasKey("DoctorProfileId", "CareOption");
+
+                    b.ToTable("DoctorCareOptions");
+                });
+
+            modelBuilder.Entity("BackendOHCP.Models.DoctorProfile", b =>
+                {
+                    b.Property<int>("DoctorProfileId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("DoctorProfileId"));
+
+                    b.Property<int?>("ExperienceYears")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Qualification")
+                        .HasColumnType("longtext");
+
+                    b.Property<decimal?>("Rating")
+                        .HasColumnType("decimal(65,30)");
+
+                    b.Property<string>("Specialization")
+                        .IsRequired()
+                        .HasColumnType("longtext");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("DoctorProfileId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("DoctorProfiles");
+                });
+
             modelBuilder.Entity("BackendOHCP.Models.MedicalRecord", b =>
                 {
                     b.Property<int>("RecordId")
@@ -109,6 +163,9 @@ namespace BackendOHCP.Migrations
                         .HasColumnType("int");
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("RecordId"));
+
+                    b.Property<int?>("AppointmentId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime(6)");
@@ -119,10 +176,6 @@ namespace BackendOHCP.Migrations
                     b.Property<int?>("DoctorId")
                         .HasColumnType("int");
 
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
 
@@ -131,6 +184,8 @@ namespace BackendOHCP.Migrations
                         .HasColumnType("longtext");
 
                     b.HasKey("RecordId");
+
+                    b.HasIndex("AppointmentId");
 
                     b.HasIndex("DoctorId");
 
@@ -175,38 +230,6 @@ namespace BackendOHCP.Migrations
                     b.HasIndex("PatientId");
 
                     b.ToTable("Prescriptions");
-                });
-
-            modelBuilder.Entity("DoctorProfile", b =>
-                {
-                    b.Property<int>("DoctorProfileId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("DoctorProfileId"));
-
-                    b.Property<int?>("ExperienceYears")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Qualification")
-                        .HasColumnType("longtext");
-
-                    b.Property<decimal?>("Rating")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<string>("Specialization")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("DoctorProfileId");
-
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.ToTable("DoctorProfiles");
                 });
 
             modelBuilder.Entity("Message", b =>
@@ -349,8 +372,34 @@ namespace BackendOHCP.Migrations
                     b.Navigation("Patient");
                 });
 
+            modelBuilder.Entity("BackendOHCP.Models.DoctorCareOption", b =>
+                {
+                    b.HasOne("BackendOHCP.Models.DoctorProfile", "DoctorProfile")
+                        .WithMany("CareOptions")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DoctorProfile");
+                });
+
+            modelBuilder.Entity("BackendOHCP.Models.DoctorProfile", b =>
+                {
+                    b.HasOne("User", "User")
+                        .WithOne("DoctorProfile")
+                        .HasForeignKey("BackendOHCP.Models.DoctorProfile", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("BackendOHCP.Models.MedicalRecord", b =>
                 {
+                    b.HasOne("Appointment", "Appointment")
+                        .WithMany("MedicalRecords")
+                        .HasForeignKey("AppointmentId");
+
                     b.HasOne("User", "Doctor")
                         .WithMany()
                         .HasForeignKey("DoctorId")
@@ -361,6 +410,8 @@ namespace BackendOHCP.Migrations
                         .HasForeignKey("PatientId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Appointment");
 
                     b.Navigation("Doctor");
 
@@ -392,17 +443,6 @@ namespace BackendOHCP.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("Patient");
-                });
-
-            modelBuilder.Entity("DoctorProfile", b =>
-                {
-                    b.HasOne("User", "User")
-                        .WithOne("DoctorProfile")
-                        .HasForeignKey("DoctorProfile", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Message", b =>
@@ -445,7 +485,14 @@ namespace BackendOHCP.Migrations
 
             modelBuilder.Entity("Appointment", b =>
                 {
+                    b.Navigation("MedicalRecords");
+
                     b.Navigation("VideoSession");
+                });
+
+            modelBuilder.Entity("BackendOHCP.Models.DoctorProfile", b =>
+                {
+                    b.Navigation("CareOptions");
                 });
 
             modelBuilder.Entity("User", b =>
