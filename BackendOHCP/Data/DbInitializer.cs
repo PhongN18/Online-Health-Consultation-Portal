@@ -247,6 +247,59 @@ namespace BackendOHCP.Data
             context.Appointments.AddRange(appointments);
             context.SaveChanges();
 
+            // Seed Medical Records and Prescriptions for Completed Appointments
+            var completedAppointments = context.Appointments
+                .Where(a => a.Status == "Completed")
+                .ToList();
+
+            var medicalRecords = new List<MedicalRecord>();
+            var prescriptions = new List<Prescription>();
+
+            foreach (var appt in completedAppointments)
+            {
+                // Random 1–2 medical records
+                int numRecords = rnd.Next(1, 3);
+                for (int i = 0; i < numRecords; i++)
+                {
+                    medicalRecords.Add(new MedicalRecord
+                    {
+                        AppointmentId = appt.AppointmentId,
+                        PatientId = appt.PatientId,
+                        DoctorId = appt.DoctorId,
+                        RecordType = rnd.Next(2) == 0 ? "visit_summary" : "lab_result",
+                        Description = $"Auto-generated description {NumberToLetters(rnd.Next(1, 100))}",
+                        CreatedAt = appt.AppointmentTime.AddMinutes(rnd.Next(10, 120))
+                    });
+                }
+
+                // 50% chance of prescription
+                if (rnd.NextDouble() < 0.5)
+                {
+                    var meds = new[]
+                    {
+            new { name = "Paracetamol", dosage = "500mg", frequency = "2x/day" },
+            new { name = "Amoxicillin", dosage = "250mg", frequency = "3x/day" },
+            new { name = "Ibuprofen", dosage = "400mg", frequency = "2x/day" }
+        };
+
+                    var selectedMeds = meds.OrderBy(_ => rnd.Next()).Take(rnd.Next(1, 3)).ToList();
+
+                    prescriptions.Add(new Prescription
+                    {
+                        AppointmentId = appt.AppointmentId,
+                        DoctorId = appt.DoctorId,
+                        PatientId = appt.PatientId,
+                        Notes = "Follow the dosage instructions carefully.",
+                        Medications = System.Text.Json.JsonSerializer.Serialize(selectedMeds),
+                        CreatedAt = appt.AppointmentTime.AddMinutes(rnd.Next(5, 90))
+                    });
+                }
+            }
+
+            context.MedicalRecords.AddRange(medicalRecords);
+            context.Prescriptions.AddRange(prescriptions);
+            context.SaveChanges();
+
         }
     }
 }
