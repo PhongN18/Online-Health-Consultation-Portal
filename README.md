@@ -93,7 +93,7 @@ The backend includes a `DbInitializer` that seeds:
 
 ### 🧪 Testing
 
-- Login as admin/doctor/patient:
+Login as admin/doctor/patient:
 
 * Admin: admin@ohcp.com / Admin@123
 * Doctor: doctor{i}@ohcp.com / Doctor{i}@123 - i from 1 to 50
